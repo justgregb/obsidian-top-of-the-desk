@@ -2,7 +2,7 @@
 
 ## Short description
 
-Top of the Desk keeps your current work within reach.
+Keep notes, files, websites, and writing tools together on a customizable desk.
 
 Bring the things you’re working on together in Obsidian: a draft, a reading list, today’s note, and the references you keep returning to.
 
@@ -12,7 +12,7 @@ Return to recently opened items, continue your daily writing, and see your writi
 
 ## Compact metadata description
 
-Top of the Desk keeps your current work within reach.
+Keep notes, files, websites, and writing tools together on a customizable desk.
 
 Use the opening sentence in the plugin manifest and GitHub repository description. The full approved description above is used in the README and release notes.
 

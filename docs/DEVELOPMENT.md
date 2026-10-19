@@ -1,6 +1,6 @@
 # Development
 
-Top of the Desk 0.9.52 uses settings schema 10. Runtime dependencies on Obsidian and CodeMirror remain external to the production bundle.
+Top of the Desk 0.9.53 uses settings schema 10. Runtime dependencies on Obsidian and CodeMirror remain external to the production bundle.
 
 ```sh
 npm ci

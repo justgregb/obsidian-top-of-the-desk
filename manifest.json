@@ -1,9 +1,9 @@
 {
   "id": "top-of-the-desk",
   "name": "Top of the Desk",
-  "version": "0.9.52",
+  "version": "0.9.53",
   "minAppVersion": "1.14.4",
-  "description": "Top of the Desk keeps your current work within reach.",
+  "description": "Keep notes, files, websites, and writing tools together on a customizable desk.",
   "author": "Greg B.",
   "isDesktopOnly": true
 }
