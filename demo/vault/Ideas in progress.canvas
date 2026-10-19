@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "essay",
+      "type": "file",
+      "file": "Projects/A quieter morning.md",
+      "x": -320,
+      "y": -120,
+      "width": 300,
+      "height": 220
+    },
+    {
+      "id": "question",
+      "type": "text",
+      "text": "What makes a place feel like yours?",
+      "x": 80,
+      "y": -120,
+      "width": 280,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "photo",
+      "type": "file",
+      "file": "Media/Coast study.svg",
+      "x": 80,
+      "y": 110,
+      "width": 360,
+      "height": 240
+    }
+  ],
+  "edges": [
+    {
+      "id": "connection",
+      "fromNode": "essay",
+      "fromSide": "right",
+      "toNode": "question",
+      "toSide": "left",
+      "label": "a question to follow"
+    }
+  ]
+}

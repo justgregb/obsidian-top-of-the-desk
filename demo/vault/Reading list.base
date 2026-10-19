@@ -1,0 +1,18 @@
+filters:
+  and:
+    - file.inFolder("Library")
+properties:
+  file.name:
+    displayName: Title
+  note.status:
+    displayName: Status
+views:
+  - type: table
+    name: Reading list
+    order:
+      - file.name
+    sort:
+      - property: file.name
+        direction: ASC
+    columnSize:
+      file.name: 270

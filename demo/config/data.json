@@ -1,0 +1,308 @@
+{
+  "version": 10,
+  "items": [
+    {
+      "id": "morning",
+      "type": "note",
+      "path": "Projects/A quieter morning.md"
+    },
+    {
+      "id": "observations",
+      "type": "stack",
+      "name": "Small observations",
+      "description": "The blue hour, Things worth keeping, A walk by the harbour",
+      "paths": [
+        "Field notes/The blue hour.md",
+        "Field notes/Things worth keeping.md",
+        "Field notes/A walk by the harbour.md"
+      ]
+    },
+    {
+      "id": "field-notes",
+      "type": "folder",
+      "path": "Field notes",
+      "description": "Small observations, The long way home",
+      "showWordCount": false
+    },
+    {
+      "id": "space",
+      "type": "note",
+      "path": "Projects/Leave room for the unexpected.md"
+    }
+  ],
+  "putAwayItems": [],
+  "openOnStartup": true,
+  "openOnNewTab": false,
+  "pageTitle": "A little room to think",
+  "scratchPath": "Writing/Scratchpad.md",
+  "widgets": {
+    "item-morning": {
+      "type": "note",
+      "enabled": true,
+      "columns": 1,
+      "rows": 2,
+      "path": "Projects/A quieter morning.md",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 1,
+          "row": 1
+        }
+      },
+      "itemId": "morning"
+    },
+    "item-observations": {
+      "type": "stack",
+      "enabled": true,
+      "columns": 1,
+      "rows": 2,
+      "path": "",
+      "view": "",
+      "title": "Small observations",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 2,
+          "row": 1
+        }
+      },
+      "itemId": "observations"
+    },
+    "item-field-notes": {
+      "type": "folder",
+      "enabled": true,
+      "columns": 1,
+      "rows": 2,
+      "path": "Field notes",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 1,
+          "row": 3
+        }
+      },
+      "itemId": "field-notes",
+      "presentation": "cover"
+    },
+    "reading": {
+      "type": "base",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "Reading list.base",
+      "view": "Reading list",
+      "title": "Reading list",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 3,
+          "row": 1
+        }
+      },
+      "showBaseControls": false
+    },
+    "coast": {
+      "type": "image",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "Media/Coast study.svg",
+      "view": "",
+      "title": "Coast study",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 4,
+          "row": 1
+        }
+      }
+    },
+    "writing": {
+      "type": "widget-stack",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 2,
+          "row": 3
+        }
+      },
+      "members": [
+        "daily",
+        "scratchpad"
+      ],
+      "activeMember": "daily"
+    },
+    "daily": {
+      "type": "daily",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 2,
+          "row": 3
+        }
+      }
+    },
+    "scratchpad": {
+      "type": "scratchpad",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 2,
+          "row": 3
+        }
+      }
+    },
+    "activity": {
+      "type": "activity",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 1,
+          "row": 5
+        }
+      }
+    },
+    "recents": {
+      "type": "recents",
+      "enabled": true,
+      "columns": 1,
+      "rows": 4,
+      "path": "",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 3,
+          "row": 5
+        }
+      }
+    },
+    "item-space": {
+      "type": "note",
+      "enabled": true,
+      "columns": 1,
+      "rows": 2,
+      "path": "Projects/Leave room for the unexpected.md",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 2,
+          "row": 7
+        }
+      },
+      "itemId": "space"
+    },
+    "guide": {
+      "type": "pdf",
+      "enabled": true,
+      "columns": 1,
+      "rows": 1,
+      "path": "Media/Field guide.pdf",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 4,
+          "row": 5
+        }
+      }
+    },
+    "ideas": {
+      "type": "canvas",
+      "enabled": true,
+      "columns": 1,
+      "rows": 1,
+      "path": "Ideas in progress.canvas",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 4,
+          "row": 6
+        }
+      }
+    },
+    "audio": {
+      "type": "audio",
+      "enabled": true,
+      "columns": 1,
+      "rows": 1,
+      "path": "Media/A moment of quiet.wav",
+      "view": "",
+      "title": "",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 4,
+          "row": 7
+        }
+      }
+    },
+    "website": {
+      "type": "web",
+      "enabled": true,
+      "columns": 1,
+      "rows": 1,
+      "path": "https://obsidian.md/",
+      "view": "",
+      "title": "A home for your ideas",
+      "showHeading": true,
+      "positions": {
+        "4": {
+          "column": 4,
+          "row": 8
+        }
+      }
+    }
+  },
+  "widgetOrder": [
+    "item-morning",
+    "item-observations",
+    "item-field-notes",
+    "reading",
+    "coast",
+    "writing",
+    "daily",
+    "scratchpad",
+    "activity",
+    "recents",
+    "item-space",
+    "guide",
+    "ideas",
+    "audio",
+    "website"
+  ]
+}

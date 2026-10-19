@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="680" viewBox="0 0 1000 680">
+<rect width="1000" height="680" fill="#f4e9d6"/>
+<path d="M0 0H1000V300Q730 275 540 333T0 360Z" fill="#b9d2d1"/>
+<circle cx="760" cy="145" r="58" fill="#cf7853"/>
+<path d="M0 345Q225 300 470 350T1000 305V680H0Z" fill="#417e80"/>
+<path d="M0 430Q220 362 430 410T1000 390" fill="none" stroke="#9cbdba" stroke-width="5"/>
+<path d="M0 500Q200 442 430 475T1000 452" fill="none" stroke="#80aaa7" stroke-width="4"/>
+<path d="M0 585Q180 535 420 565T1000 536" fill="none" stroke="#9cbdba" stroke-width="4"/>
+<path d="M1000 182Q770 300 738 438T1000 680Z" fill="#e0c9a5"/>
+<path d="M1000 222Q820 310 790 425T1000 618" fill="none" stroke="#f6eedb" stroke-width="8"/>
+<path d="M85 95H190M85 95V140" stroke="#417e80" stroke-width="3" fill="none"/>
+<text x="85" y="190" fill="#31595b" font-family="Helvetica,Arial,sans-serif" font-size="27" letter-spacing="7">COAST STUDY</text>
+<text x="85" y="231" fill="#417e80" font-family="Helvetica,Arial,sans-serif" font-size="18" letter-spacing="3">LIGHT / WATER / QUIET</text>
+</svg>

@@ -1,0 +1,18 @@
+{
+  "pluginVersion": "0.9.50",
+  "obsidian": "1.14.4 (installer 1.14.4)",
+  "capturedAt": "2026-10-16T18:14:54.054Z",
+  "viewport": {
+    "width": 1600,
+    "height": 850
+  },
+  "theme": "Obsidian default, light and dark; teal accent",
+  "syntheticData": true,
+  "images": [
+    "01-desk-light.png",
+    "02-desk-dark.png",
+    "03-note-stack.png",
+    "04-add-to-desk.png",
+    "05-scratchpad.png"
+  ]
+}

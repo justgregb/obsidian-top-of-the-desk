@@ -1,0 +1,63 @@
+(async () => {
+  const plugin = app.plugins.plugins['top-of-the-desk'];
+  if (!plugin || !plugin.scratch.loaded || plugin.scratch.dirty) throw new Error('Plugin unavailable or scratchpad busy; integration check skipped.');
+  const before = JSON.parse(JSON.stringify(plugin.settings));
+  const history = [...plugin.history];
+  const result = [];
+  let folderPath = `_Top of the Desk checks ${Date.now()}`;
+  const assert = (value, name) => { if (!value) throw new Error(name); result.push(name); };
+  const settle = () => new Promise(resolve => setTimeout(resolve, 40));
+  try {
+    await app.vault.createFolder(folderPath);
+    const a = await app.vault.create(`${folderPath}/First.md`, '# First\n\nA test note.');
+    const b = await app.vault.create(`${folderPath}/Second.md`, '# Second\n\nAnother test note.');
+    plugin.pin(a.path); plugin.pin(b.path); plugin.pin(a.path);
+    assert(plugin.settings.pins.filter(path => path === a.path).length === 1, 'Pinning is idempotent');
+    plugin.move(b.path, 0);
+    assert(plugin.settings.pins[0] === b.path, 'Reordering updates the desk');
+    await plugin.whenSaved();
+    const stored = JSON.parse(await app.vault.adapter.read(`${app.vault.configDir}/plugins/top-of-the-desk/data.json`));
+    assert(stored.pins[0] === b.path, 'Card order is persisted to disk');
+    await app.vault.rename(a, `${folderPath}/Renamed.md`);
+    assert(plugin.settings.pins.includes(a.path) && !plugin.settings.pins.includes(`${folderPath}/First.md`), 'A renamed note stays pinned');
+    await plugin.setScratchPath(`${folderPath}/Scratch.md`);
+    for (let i = 0; i < 25 && !plugin.scratch.loaded; i++) await settle();
+    assert(plugin.scratch.loaded && !app.vault.getAbstractFileByPath(plugin.settings.scratchPath), 'An unused scratchpad does not create a note');
+    plugin.scratch.edit('First draft\n\n[[A link]]'); await plugin.scratch.flush();
+    let scratch = app.vault.getFileByPath(plugin.settings.scratchPath);
+    assert(await app.vault.read(scratch) === 'First draft\n\n[[A link]]', 'Scratchpad saves exact Markdown through the vault API');
+    plugin.scratch.edit('Pending local draft');
+    await app.vault.modify(scratch, 'Newer external edit');
+    await plugin.scratch.flush();
+    assert(plugin.scratch.conflict && await app.vault.read(scratch) === 'Newer external edit', 'An actual external edit is protected from overwrite');
+    await plugin.saveScratchCopy();
+    const recovery = app.vault.getMarkdownFiles().find(file => file.path.startsWith(folderPath + '/Scratch — recovered '));
+    assert(recovery && await app.vault.read(recovery) === 'Pending local draft' && plugin.scratch.text === 'Newer external edit', 'A conflict copy preserves the draft and restores the current note');
+    plugin.scratch.edit('Draft before folder rename');
+    const nextFolder = folderPath + ' moved';
+    await app.vault.rename(app.vault.getAbstractFileByPath(folderPath), nextFolder);
+    folderPath = nextFolder;
+    await plugin.scratch.flush();
+    assert(plugin.settings.pins.includes(`${folderPath}/Renamed.md`) && plugin.settings.scratchPath === `${folderPath}/Scratch.md`, 'Folder renames update card and scratchpad paths');
+    scratch = app.vault.getFileByPath(plugin.settings.scratchPath);
+    assert(await app.vault.read(scratch) === 'Draft before folder rename', 'A pending scratch draft survives its folder being moved');
+    const removedPath = `${folderPath}/Second.md`;
+    await app.vault.trash(app.vault.getFileByPath(removedPath), true);
+    plugin.refreshViews(); await settle();
+    assert(plugin.settings.pins.includes(removedPath) && !app.vault.getFileByPath(removedPath), 'A missing pinned note remains removable without losing its position');
+    plugin.unpin(removedPath);
+    assert(!plugin.settings.pins.includes(removedPath), 'Removing a missing card works');
+    await plugin.openDesk(); await plugin.openDesk();
+    assert(app.workspace.getLeavesOfType('top-of-the-desk-home').length === 1, 'Opening the desk reuses its existing tab');
+    assert(!!document.querySelector('.tod-base-host .bases-view'), 'The featured Base uses the native live renderer');
+  } finally {
+    plugin.scratch.stop();
+    plugin.settings = before; plugin.history = history;
+    app.saveLocalStorage('top-of-the-desk:recents', history);
+    plugin.setupScratch(); plugin.changed(); await plugin.whenSaved();
+    const folder = app.vault.getAbstractFileByPath(folderPath);
+    if (folder) await app.vault.trash(folder, true);
+    await plugin.openDesk();
+  }
+  return JSON.stringify({ passed: result.length, checks: result, restored: true });
+})()

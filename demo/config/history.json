@@ -1,0 +1,63 @@
+{
+  "recents": [
+    {
+      "kind": "file",
+      "path": "Projects/A quieter morning.md",
+      "daysAgo": 0,
+      "hour": 8
+    },
+    {
+      "kind": "file",
+      "path": "Ideas in progress.canvas",
+      "daysAgo": 0,
+      "hour": 7
+    },
+    {
+      "kind": "file",
+      "path": "Media/Field guide.pdf",
+      "daysAgo": 1,
+      "hour": 17
+    },
+    {
+      "kind": "file",
+      "path": "Field notes/The blue hour.md",
+      "daysAgo": 1,
+      "hour": 16
+    },
+    {
+      "kind": "file",
+      "path": "Reading list.base",
+      "daysAgo": 2,
+      "hour": 10
+    },
+    {
+      "kind": "file",
+      "path": "Media/A moment of quiet.wav",
+      "daysAgo": 2,
+      "hour": 9
+    },
+    {
+      "kind": "file",
+      "path": "Media/Coast study.svg",
+      "daysAgo": 3,
+      "hour": 14
+    },
+    {
+      "kind": "folder",
+      "path": "Field notes",
+      "daysAgo": 4,
+      "hour": 11
+    }
+  ],
+  "lastWorked": [
+    "Projects/A quieter morning.md"
+  ],
+  "web": [
+    {
+      "url": "https://obsidian.md/",
+      "title": "A home for your ideas",
+      "daysAgo": 1,
+      "hour": 15
+    }
+  ]
+}

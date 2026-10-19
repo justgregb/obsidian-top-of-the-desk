@@ -1,0 +1,692 @@
+/* The status bar describes the active note; keep it out of the desk view. */
+body:has(.workspace-leaf.mod-active > .workspace-leaf-content[data-type="top-of-the-desk-home"]) .status-bar { display: none; }
+
+.workspace-leaf-content[data-type="top-of-the-desk-home"] .view-content.tod-view {
+  padding: 0; overflow: auto; scrollbar-gutter: stable; background: var(--background-primary); container-type: inline-size; container-name: tod-home;
+}
+.tod-shell { --tod-card-radius: var(--radius-l); --tod-control-size: 24px; --tod-content-control-size: 24px; --tod-identity-icon-size: 16px; --tod-list-gap: 8px; --tod-list-inset: 6px; --tod-cover-copy-gap: 8px; --tod-pill-height: calc(var(--tod-control-size) + 2px); --tod-pill-radius: 999px; --tod-pill-inset: 8px; --tod-pill-gap: 4px; --tod-pill-action-gap: 2px; --tod-control-inset: 3px; --tod-control-radius: 6px; --tod-meta-font-size: var(--font-ui-smaller); --tod-meta-line-height: 18px; --tod-meta-height: var(--tod-pill-height); --tod-meta-gap: 6px; --tod-meta-color: var(--text-muted); --tod-gap: 14px; --tod-widget-padding: 14px; --tod-widget-heading-height: 24px; --tod-title-line-height: 22px; --tod-row-height: 64px; max-width: 1440px; margin: 0 auto; padding: 22px 24px 30px; color: var(--text-normal); }
+.tod-shell [hidden] { display: none !important; }
+.tod-shell button:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; box-shadow: none; }
+/* One capsule surface for text, metadata actions, toolbars and stack navigation.
+   Include buttons explicitly so native/theme button rules cannot change their shape. */
+.tod-shell .tod-pill, .tod-shell button.tod-pill { display: inline-flex; align-items: center; box-sizing: border-box; flex: 0 1 auto; gap: var(--tod-pill-gap); min-width: 0; max-width: 100%; height: var(--tod-pill-height); min-height: 0; margin: 0; padding: 0 var(--tod-pill-inset); appearance: none; border: 1px solid var(--background-modifier-border); border-radius: var(--tod-pill-radius); background: var(--background-primary); box-shadow: none; color: var(--tod-meta-color); font-family: inherit; font-size: var(--tod-meta-font-size); font-weight: 400; line-height: var(--tod-meta-line-height); white-space: nowrap; }
+.tod-shell .tod-pill-actions { gap: var(--tod-pill-action-gap); padding-inline: var(--tod-pill-gap); }
+.tod-shell button.tod-pill { cursor: pointer; text-align: start; }
+.tod-shell button.tod-pill:is(:hover, :focus-visible, [aria-expanded="true"]) { background: linear-gradient(var(--background-modifier-hover), var(--background-modifier-hover)), var(--background-primary); color: var(--text-normal); }
+.tod-shell .tod-pill-actions > button, .tod-shell .tod-widget-controls button.tod-widget-action { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 var(--tod-control-size); width: var(--tod-control-size); min-width: var(--tod-control-size); height: var(--tod-control-size); min-height: var(--tod-control-size); margin: 0; padding: 4px; appearance: none; border: 0; border-radius: var(--tod-pill-radius); background: transparent; box-shadow: none; color: var(--text-muted); cursor: pointer; }
+/* The hit target stays full size; its visible highlight is inset from the capsule. */
+.tod-shell .tod-pill-actions > button::after, .tod-shell .tod-widget-controls button.tod-widget-action::after { content: ''; position: absolute; z-index: -1; inset: var(--tod-control-inset); border-radius: var(--tod-control-radius); background: transparent; pointer-events: none; }
+.tod-shell .tod-pill-actions > button:is(:hover, :focus-visible, [aria-expanded="true"]), .tod-shell .tod-widget-controls button.tod-widget-action:is(:hover, :focus-visible, [aria-expanded="true"]) { background: transparent; color: var(--text-normal); }
+.tod-shell .tod-pill-actions > button:is(:hover, :focus-visible, [aria-expanded="true"])::after, .tod-shell .tod-widget-controls button.tod-widget-action:is(:hover, :focus-visible, [aria-expanded="true"])::after { background: var(--background-modifier-hover); }
+.tod-shell .tod-pill-actions > button:focus-visible, .tod-shell .tod-widget-controls button.tod-widget-action:focus-visible { outline: none; }
+.tod-shell .tod-pill-actions > button:focus-visible::after, .tod-shell .tod-widget-controls button.tod-widget-action:focus-visible::after { outline: 2px solid var(--interactive-accent); outline-offset: 0; }
+.tod-shell button.tod-pill.tod-resume-note, .tod-shell .tod-pill-actions > button[aria-current="true"], .tod-shell .tod-widget-controls button.tod-widget-action[aria-pressed="true"] { color: var(--text-accent); }
+.tod-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.tod-header h1 { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 24px; font-weight: 600; line-height: 30px; letter-spacing: -.025em; }
+.tod-shell .tod-header h1.is-editing { box-sizing: border-box; height: var(--tod-title-height); min-width: 1ch; padding: 0; border: 0; border-radius: var(--radius-s); outline: 1px dashed var(--background-modifier-border-hover); outline-offset: 4px; box-shadow: none; background: transparent; overflow: auto; scrollbar-width: none; cursor: text; }
+.tod-shell .tod-header h1.is-editing:focus { outline: 2px solid var(--interactive-accent); }
+.tod-shell .tod-header h1.is-editing.is-empty::before { content: 'Add a title'; color: var(--text-faint); pointer-events: none; }
+.tod-quick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.tod-shell button.tod-quick-action { display: inline-flex; align-items: center; justify-content: flex-start; gap: 7px; height: 30px; padding: 0 10px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); box-shadow: none; background: transparent; color: var(--text-muted); font-size: var(--font-ui-small); }
+.tod-shell button.tod-quick-action:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.tod-quick-action > span:first-child { display: flex; }
+.tod-quick-action svg { width: 14px; height: 14px; }
+/* Two compact tracks plus their gap retain the previous smallest card height. */
+.tod-widgets { --tod-card-title-height: var(--tod-content-control-size); --tod-cover-padding: 12px; --tod-stack-sheet-step: 4px; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: var(--tod-row-height); grid-auto-flow: row dense; gap: var(--tod-gap); align-items: stretch; min-height: var(--tod-row-height); }
+.tod-widget { position: relative; box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; padding: var(--tod-widget-padding); border: 1px solid var(--background-modifier-border); border-radius: var(--tod-card-radius); background: var(--background-primary); }
+/* One quiet pill groups the controls without changing the widget's footprint. */
+.tod-shell .tod-widget-controls { position: absolute; z-index: 7; inset-block-start: calc(-.5 * var(--tod-pill-height)); inset-inline-end: var(--tod-widget-padding); max-width: calc(100% - 2 * var(--tod-widget-padding)); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+.tod-widget-controls::-webkit-scrollbar { display: none; }
+.tod-widget-controls button.tod-widget-action svg { width: 14px; height: 14px; }
+.tod-widget[data-columns="1"] { grid-column: span 1; }
+.tod-widget[data-columns="2"] { grid-column: span 2; }
+.tod-widget[data-columns="3"] { grid-column: span 3; }
+.tod-widget[data-columns="4"] { grid-column: span 4; }
+.tod-section-heading { display: flex; flex-shrink: 0; align-items: center; gap: var(--tod-list-gap); min-height: var(--tod-widget-heading-height); margin: 0 0 10px; }
+.tod-section-heading h2 { flex: 1; min-width: 0; max-width: 100%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui-small); font-weight: 600; line-height: var(--tod-title-line-height); }
+.tod-widget.is-heading-hidden > .tod-section-heading { display: none; }
+.tod-widget-cover.is-heading-hidden .tod-card-heading { display: none; }
+/* Preserve heading geometry; nested content hands scrolling back to the desk at its edges. */
+.tod-widget-body { position: relative; display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: auto; }
+/* Linked headings use one flex row; inline baselines must not shift the editor below. */
+.tod-section-heading h2.tod-linked-heading { display: flex; align-items: center; }
+.tod-shell button.tod-widget-title { display: flex; align-items: center; justify-content: flex-start; gap: 5px; box-sizing: border-box; min-width: 0; max-width: 100%; height: var(--tod-widget-heading-height); min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; color: var(--text-normal); font: inherit; text-align: left; }
+.tod-widget-title > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tod-daily-date { font-variant-numeric: tabular-nums; }
+.tod-open-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 12px; width: 12px; height: 12px; color: var(--text-faint); }
+.tod-open-icon svg { display: block; width: 12px; height: 12px; }
+.tod-shell button.tod-widget-title:hover, .tod-widget-title:hover .tod-open-icon { color: var(--text-accent); }
+.tod-shell button.tod-icon-button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 5px; width: 28px; height: 28px; border: 0; box-shadow: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-s); }
+.tod-shell button.tod-icon-button:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.tod-icon-button svg { width: 16px; height: 16px; }
+.tod-shell button.tod-widget-grip { cursor: grab; }
+.tod-shell button.tod-widget-grip:active { cursor: grabbing; }
+.tod-widget.is-dragging, .tod-card.is-dragging { opacity: .45; }
+/* Covers fill the shared grid footprint, with consistent insets and aligned footers. */
+.tod-card { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--tod-cover-copy-gap); min-width: 0; min-height: 0; padding: var(--tod-cover-padding); border: 1px solid var(--background-modifier-border); border-radius: var(--tod-card-radius); background: var(--background-primary-alt); }
+.tod-note-cover { --tod-source-control-background: var(--background-primary-alt); cursor: pointer; }
+.tod-card:hover { border-color: var(--background-modifier-border-hover); }
+.tod-card-heading { display: flex; flex: 0 0 auto; align-items: flex-start; min-width: 0; min-height: var(--tod-card-title-height); gap: 4px; }
+.tod-card-heading > .tod-icon-button { margin-left: auto; }
+.tod-last-worked-marker { display: inline-flex; align-items: center; flex: 0 1 auto; min-width: 0; gap: 4px; color: var(--text-accent); }
+.tod-last-worked-marker > span:first-child { display: inline-flex; flex: 0 0 auto; }
+.tod-last-worked-marker svg { width: 14px; height: 14px; }
+.tod-last-worked-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-accent); font-size: var(--font-ui-smaller); font-weight: 500; }
+.tod-shell button.tod-note-title, .tod-shell button.tod-recent-link { box-shadow: none; background: transparent; border: 0; height: auto; padding: 0; text-align: left; }
+.tod-shell button.tod-note-title { display: block; overflow: hidden; text-overflow: ellipsis; min-width: 0; white-space: nowrap; line-height: 20px; font-size: var(--font-ui-small); font-weight: 600; color: var(--text-normal); }
+.tod-shell button.tod-note-title:hover:not(:disabled) { color: var(--text-accent); }
+.tod-shell .tod-card-heading button.tod-card-title { display: flex; flex: 1 1 0; align-items: flex-start; justify-content: flex-start; gap: var(--tod-list-gap); min-width: 0; min-height: var(--tod-card-title-height); height: auto; margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; color: var(--text-normal); font-size: var(--font-ui-small); font-weight: 600; line-height: var(--tod-title-line-height); text-align: start; }
+/* All card identities share a fixed frame and the native file icon's stroke weight. */
+.tod-note-symbol, .tod-stack-symbol, .tod-desk-folder-icon, .tod-widget-symbol { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--tod-identity-icon-size); width: var(--tod-identity-icon-size); height: var(--tod-title-line-height); color: var(--text-muted); }
+.tod-note-symbol svg, .tod-stack-symbol svg, .tod-desk-folder-icon svg, .tod-widget-symbol svg { display: block; flex: 0 0 var(--tod-identity-icon-size); width: var(--tod-identity-icon-size); height: var(--tod-identity-icon-size); stroke-width: 2; }
+.tod-card-label { display: block; flex: 1 1 0; align-self: flex-start; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
+.tod-preview, .tod-collection-description { display: -webkit-box; flex: 0 0 auto; min-width: 0; min-height: 0; align-self: stretch; margin: 0; font-size: var(--font-ui-smaller); line-height: 18px; color: var(--text-muted); -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+/* One metadata vocabulary; source actions retain their own trailing column. */
+.tod-card-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; flex: 0 0 auto; align-items: end; min-width: 0; min-height: var(--tod-meta-height); gap: var(--tod-meta-gap); margin: auto 0 0; }
+.tod-metadata-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tod-meta-gap); min-width: 0; }
+.tod-metadata-actions { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tod-metadata-actions:empty { display: none; }
+.tod-card-footer:has(> .tod-metadata-actions:empty) { grid-template-columns: minmax(0, 1fr); }
+.tod-preview:empty, .tod-card-footer:not(:has(> .tod-metadata-group > :not([hidden]), > .tod-metadata-actions > :not([hidden]))) { display: none; }
+.tod-metadata-icon { display: inline-flex; flex: 0 0 auto; }
+.tod-metadata-icon svg { width: 14px; height: 14px; }
+.tod-metadata-value, .tod-stack-count-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-normal); }
+.tod-metadata-unit { flex: 0 0 auto; }
+.tod-shell .tod-folder.tod-metadata-pill { display: block; overflow: hidden; text-overflow: ellipsis; line-height: calc(var(--tod-meta-height) - 2px); }
+.tod-stack-words { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; font-variant-numeric: tabular-nums; }
+.tod-metadata-summary > .tod-stack-words::before { content: '·'; flex: 0 0 auto; padding-inline: 2px; color: var(--text-faint); }
+.tod-resume-label, .tod-resume-compact { flex: 0 0 auto; }
+.tod-resume-compact { display: none; }
+.tod-resume-detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tod-resume-detail::before { content: '·'; padding-inline-end: var(--tod-pill-gap); }
+.tod-shell .tod-card-footer button.tod-open-note { position: static; background: transparent; width: var(--tod-content-control-size); height: var(--tod-content-control-size); padding: 5px; }
+.tod-shell :is(.tod-card, .tod-stack-note-row) button.tod-icon-button { width: var(--tod-content-control-size); height: var(--tod-content-control-size); padding: 5px; }
+.tod-card .tod-icon-button svg, .tod-stack-note-row .tod-icon-button svg { width: 14px; height: 14px; }
+/* Item covers share the desk grid; only their text previews clip, never the page. */
+.tod-widget-cover { --tod-preview-lines: 2; padding: 0; border: 0; border-radius: var(--tod-card-radius); background: transparent; container-type: size; container-name: tod-cover; }
+.tod-widget-cover > .tod-widget-body { overflow: visible; }
+.tod-widget-cover .tod-desk-item { flex: 1 1 auto; height: 100%; margin: 0; }
+.tod-widget-cover .tod-card { min-height: 0; }
+.tod-widget-cover :is(.tod-preview, .tod-collection-description) { flex: 0 0 auto; min-height: 0; max-height: 36px; }
+.tod-widget-cover .tod-card-footer { margin-top: auto; }
+.tod-widget-cover .tod-card-label { white-space: nowrap; }
+@container tod-cover (min-height: 210px) {
+  .tod-card { --tod-preview-lines: 4; }
+  .tod-widget-cover :is(.tod-preview, .tod-collection-description) { -webkit-line-clamp: 4; max-height: 72px; }
+  .tod-widget-cover .tod-card-label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow-wrap: anywhere; }
+}
+.tod-widget-cover .tod-widget-controls { z-index: 7; }
+
+/* Cover faces fill their grid slots; decorative stack sheets extend into the grid gap. */
+.tod-desk-item { position: relative; min-width: 0; min-height: 0; align-self: stretch; }
+.tod-stack, .tod-desk-folder { display: flex; flex-direction: column; }
+.tod-stack { isolation: isolate; border: 0; background: transparent; }
+.tod-stack-layers { position: absolute; z-index: 0; inset: 0; pointer-events: none; }
+.tod-stack-sheet { position: absolute; display: block; box-sizing: border-box; border: 1px solid var(--background-modifier-border-hover); border-radius: var(--tod-card-radius); background: var(--background-primary-alt); }
+.tod-stack-sheet-back { inset: calc(2 * var(--tod-stack-sheet-step)) calc(2 * var(--tod-stack-sheet-step)) calc(-2 * var(--tod-stack-sheet-step)); }
+.tod-stack-sheet-front { inset: var(--tod-stack-sheet-step) var(--tod-stack-sheet-step) calc(-1 * var(--tod-stack-sheet-step)); }
+.tod-collection-cover { position: relative; z-index: 1; flex: 1 1 auto; cursor: pointer; }
+.tod-note-cover.is-open, .tod-stack.is-open .tod-stack-main { border-color: var(--interactive-accent); }
+/* Folder covers use the shared collection layout and mark their state at the border. */
+.tod-desk-folder { --tod-folder-border: var(--background-modifier-border); isolation: isolate; cursor: pointer; }
+.tod-desk-folder .tod-collection-cover { border-color: var(--tod-folder-border); }
+.tod-desk-folder:hover { --tod-folder-border: var(--background-modifier-border-hover); }
+.tod-desk-folder.is-open { --tod-folder-border: var(--interactive-accent); }
+.tod-shell button.tod-card-title:hover:not(:disabled) .tod-card-label { color: var(--text-accent); }
+.is-open > .tod-collection-cover .tod-stack-symbol { color: var(--text-accent); }
+.tod-stack.is-dragging, .tod-desk-folder.is-dragging { opacity: .45; }
+.tod-drag-handle { touch-action: auto; user-select: none; -webkit-user-drag: none; cursor: grab; }
+.tod-section-heading.tod-drag-handle button.tod-widget-title { cursor: grab; }
+.tod-drag-handle.tod-touch-drag-handle { touch-action: none; }
+.tod-drag-handle svg { pointer-events: none; }
+body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !important; user-select: none !important; }
+.tod-drag-preview { position: fixed; z-index: calc(var(--layer-popover, 100) + 10); top: 0; left: 0; max-width: min(260px, calc(100vw - 16px)); padding: 8px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid var(--background-modifier-border-hover); border-radius: var(--radius-m); background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-m); font-size: var(--font-ui-small); font-weight: 500; pointer-events: none; }
+.tod-drag-preview.is-valid-drop { border-color: var(--interactive-accent); }
+.tod-insertion-marker { position: fixed; z-index: calc(var(--layer-popover, 100) + 1); border-radius: 1px; background: var(--interactive-accent); opacity: .8; pointer-events: none; }
+.tod-insertion-marker[hidden] { display: none; }
+.tod-pointer-dragging .tod-card:hover { border-color: var(--background-modifier-border); }
+.tod-pointer-dragging .tod-card .tod-note-title:hover { color: var(--text-normal); }
+
+/* Collection browsers float above the desk without moving its items. */
+.tod-shell.tod-stack-popover, .tod-shell.tod-folder-popover, .tod-shell.tod-note-popover { position: fixed; z-index: var(--layer-popover, 100); display: flex; flex-direction: column; box-sizing: border-box; max-width: calc(100vw - 32px); min-width: 0; margin: 0; padding: 12px; overflow: hidden; border: 1px solid var(--background-modifier-border-hover); border-radius: var(--radius-l); background: var(--background-primary); box-shadow: var(--shadow-m, 0 8px 24px #0002); animation: tod-stack-appear 120ms ease-out; }
+.tod-folder-popover-title { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui-small); font-weight: 600; line-height: var(--tod-title-line-height); }
+.tod-note-popover-body { flex: 1 1 auto; min-width: 0; min-height: 0; padding: 2px; margin: -2px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; border-radius: var(--radius-s); }
+.tod-note-popover-body:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
+.tod-note-preview-markdown { font-size: var(--font-ui-small); line-height: 1.55; overflow-wrap: anywhere; user-select: text; }
+.tod-note-preview-markdown > :first-child { margin-top: 0; }
+.tod-note-preview-markdown > :last-child { margin-bottom: 0; }
+.tod-note-preview-markdown :is(p, ul, ol, blockquote, pre) { margin-block: .65em; }
+.tod-note-preview-markdown :is(h1, h2, h3, h4, h5, h6) { margin-block: .8em .4em; font-size: 1.1em; line-height: 1.4; }
+.tod-note-preview-markdown img { max-width: 100%; max-height: 220px; object-fit: contain; }
+.tod-note-preview-markdown input[type="checkbox"]:disabled { opacity: 1; cursor: default; }
+.tod-note-preview-status { margin: 8px 0 0; color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 1.5; }
+.tod-note-preview-status:first-child { margin-top: 0; }
+.tod-folder-popover-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
+.tod-folder-popover .tod-empty-state { flex: 0 0 auto; align-items: flex-start; justify-content: flex-start; padding: 8px 2px; }
+.tod-stack-popover-header { display: flex; flex: 0 0 auto; align-items: center; min-width: 0; gap: 12px; padding: 0 var(--tod-list-inset); margin-bottom: 10px; }
+.tod-stack-popover-identity { display: flex; flex: 1 1 0; align-items: center; gap: var(--tod-list-gap); min-width: 0; }
+.tod-stack-popover-actions { display: flex; flex-shrink: 0; align-items: center; gap: 4px; }
+.tod-stack-popover-list { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; gap: 2px; padding: 2px; margin: -2px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-gutter: stable; }
+.tod-folder-popover .tod-folder-list { overscroll-behavior: contain; grid-template-columns: minmax(0, 1fr); padding: 2px; margin: -2px; }
+/* Keep the header and list in the same icon/text columns, with room inside hover rows. */
+.tod-shell:is(.tod-stack-popover, .tod-folder-popover) button.tod-folder-link { padding-inline: var(--tod-list-inset); gap: var(--tod-list-gap); }
+.tod-stack-note-row { flex: 0 0 auto; min-width: 0; }
+.tod-shell .tod-stack-note-row button.tod-icon-button { width: 24px; height: 24px; padding: 5px; }
+.tod-stack-note-row .tod-icon-button svg { width: 14px; height: 14px; }
+.tod-stack-note-row.is-dragging { opacity: .45; }
+.tod-shell button.tod-folder-link.tod-note-title { display: flex; font-weight: 400; }
+@keyframes tod-stack-appear { from { opacity: 0; } to { opacity: 1; } }
+.tod-recents, .tod-recent { min-width: 0; margin: 0; padding: 0; }
+.tod-recents { display: grid; flex: 1 1 auto; min-height: 0; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); grid-auto-rows: max-content; align-content: start; align-items: start; gap: 2px 12px; padding: 0; overflow: auto; overscroll-behavior: auto; scrollbar-gutter: stable; }
+/* One row rhythm for notes and folders; the reserved grip never shifts the title. */
+.tod-shell :is(button.tod-recent-link, button.tod-folder-link) { display: flex; align-items: center; justify-content: flex-start; gap: var(--tod-list-gap); width: 100%; min-width: 0; height: auto; min-height: 28px; margin: 0; padding: 4px var(--tod-list-inset); border: 0; border-radius: var(--radius-s); background: transparent; box-shadow: none; color: var(--text-normal); font-size: var(--font-ui-small); line-height: 20px; text-align: left; cursor: pointer; }
+.tod-recent-file-icon { display: inline-flex; flex: 0 0 var(--tod-identity-icon-size); align-items: center; justify-content: center; width: var(--tod-identity-icon-size); height: 20px; color: var(--text-muted); }
+.tod-recent-file-icon svg { display: block; width: var(--tod-identity-icon-size); height: var(--tod-identity-icon-size); stroke-width: 2; }
+.tod-recent-title { display: block; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--font-ui-small); text-align: left; white-space: nowrap; line-height: 20px; }
+.tod-recent, .tod-folder-row { border-radius: var(--radius-s); }
+.tod-recent:is(:hover, :has(:focus-visible)), .tod-folder-row:is(:hover, :has(:focus-visible)) { background: var(--background-modifier-hover); }
+.tod-source-note { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tod-source-note > button.tod-source-link { flex: 1 1 0; width: 0; min-width: 0; }
+/* Recent rows own their columns, even when the note is already on the desk. */
+.tod-shell .tod-recent { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 4px; }
+.tod-shell.has-desk .tod-recent { grid-template-columns: minmax(0, 1fr) var(--tod-content-control-size); }
+.tod-shell .tod-recent > button.tod-recent-link { grid-column: 1; grid-row: 1; box-sizing: border-box; width: 100%; padding-inline: 0; }
+.tod-shell .tod-recent > button.tod-source-grip { grid-column: 2; grid-row: 1; }
+.tod-recent-domain { flex: 0 1 auto; min-width: 0; max-width: 35%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tod-meta-color); font-size: var(--tod-meta-font-size); }
+.tod-shell.has-desk button.tod-source-link { cursor: grab; }
+.tod-shell:not(.has-desk) button.tod-source-link { cursor: pointer; }
+.tod-shell button.tod-source-grip { flex: 0 0 auto; width: var(--tod-content-control-size); height: var(--tod-content-control-size); padding: 5px; margin: 0; cursor: pointer; }
+.tod-source-grip svg { width: 14px; height: 14px; }
+.tod-shell:not(.has-desk) button.tod-source-grip { display: none; }
+.tod-source-note.is-dragging, .tod-base-host .is-dragging { opacity: .45; }
+.tod-shell.has-desk .tod-base-host .internal-link[data-href] { cursor: grab; touch-action: auto; }
+@media (hover: hover) and (pointer: fine) {
+  .tod-shell button.tod-source-grip { opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
+  .tod-shell .tod-source-note:is(:hover, :has(:focus-visible), .is-dragging) button.tod-source-grip { opacity: 1; pointer-events: auto; }
+}
+/* Keep a visible, quiet scrollbar in each content area, with stronger contrast on interaction. */
+.tod-shell :is(.tod-widget-body, .tod-recents, .tod-stack-popover-list, .tod-note-popover-body, .tod-base-host, .bases-view, .cm-scroller, .tod-writing-chart) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text-muted) 30%, transparent) transparent; }
+.tod-shell :is(.tod-widget-body, .tod-recents, .tod-stack-popover-list, .tod-note-popover-body, .tod-base-host, .bases-view, .cm-scroller, .tod-writing-chart):is(:hover, :focus-within) { scrollbar-color: color-mix(in srgb, var(--text-muted) 55%, transparent) transparent; }
+@media (forced-colors: active) {
+  .tod-shell :is(.tod-widget-body, .tod-recents, .tod-stack-popover-list, .tod-note-popover-body, .tod-base-host, .bases-view, .cm-scroller, .tod-writing-chart) { scrollbar-color: auto; }
+}
+/* Compact sources share the card grammar; only audio has a player. */
+.tod-widget-compact { background: var(--background-primary-alt); --tod-source-control-background: var(--background-primary-alt); }
+.tod-widget-source-card { cursor: pointer; }
+.tod-widget-source-card:hover { border-color: var(--background-modifier-border-hover); }
+.tod-widget-source-card > .tod-section-heading { margin-block-end: 8px; }
+.tod-widget-source-card > .tod-source-frame > .tod-widget-body { box-sizing: border-box; overflow: hidden; gap: 8px; padding-block-end: 40px; }
+.tod-compact-site { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tod-meta-color); font-size: var(--tod-meta-font-size); line-height: var(--tod-meta-line-height); }
+.tod-source-image { display: block; flex: 1 1 0; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; border-radius: var(--radius-s); }
+.tod-shell .tod-source-recovery { align-self: flex-start; flex-shrink: 0; }
+@media (pointer: coarse) {
+  .tod-widget-source-card > .tod-source-frame > .tod-widget-body { padding-block-end: 56px; }
+}
+.tod-base-host { flex: 1 1 auto; min-width: 0; min-height: 0; max-height: 100%; overflow: auto; overscroll-behavior: auto; }
+.tod-base-host > p { margin: 0; }
+.tod-base-host .internal-embed { max-width: 100%; }
+.tod-base-host .bases-embed, .tod-base-host .bases-view { max-height: 100%; }
+.tod-base-host :is(.bases-view, .bases-kanban-column-content) { overscroll-behavior: auto; }
+.tod-base-controls-hidden > .tod-base-host .bases-header,
+.tod-base-controls-hidden > .tod-base-host .bases-search-row { display: none; }
+/* The desk supplies the outer inset; native Base lists only need their marker gutter. */
+.tod-shell .tod-base-host .bases-view[data-view-type="list"] { --bases-view-padding: 4px 0; padding: var(--bases-view-padding); }
+.tod-base-host .bases-list-item { box-sizing: border-box; inline-size: 100%; margin-inline: 0; padding-inline: 0; }
+.tod-base-host .bases-list-item:has(> .bases-list-item-properties > .bases-list-property:first-child > .list-bullet) { padding-inline-start: 16px; }
+.tod-base-host .bases-list-item-properties > .bases-list-property:first-child > .list-bullet { box-sizing: border-box; width: 16px; margin-inline-start: -16px; padding-inline-end: 0; }
+.tod-base-host .bases-list-item:has(> .bases-list-item-properties > .bases-list-property:first-child > .list-number) { padding-inline-start: calc(3 * var(--bases-table-font-size)); }
+.tod-base-host .bases-list-item-properties > .bases-list-property:first-child > .list-number { box-sizing: border-box; }
+.tod-shell .tod-note-editor { position: relative; display: flex; box-sizing: border-box; width: 100%; flex: 1 0 80px; min-width: 0; min-height: 80px; height: 0; resize: none; overflow: hidden; background: var(--background-primary-alt); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); color: var(--text-normal); --file-line-width: 100%; --file-margins: 0; }
+.tod-note-editor:focus-within { border-color: var(--background-modifier-border-focus); }
+.tod-note-editor > .markdown-source-view { width: 100%; height: 100%; padding: 0; background: transparent; font-family: var(--font-text); font-size: var(--font-ui-small); line-height: 1.5; }
+.tod-note-editor .cm-editor { height: 100%; background: transparent; }
+.tod-note-editor .cm-scroller { overflow: auto; overscroll-behavior: auto; }
+.tod-note-editor .cm-sizer { width: 100%; min-width: 0; min-height: 100% !important; margin: 0; padding: 0; }
+.tod-note-editor .cm-contentContainer { width: 100%; min-width: 0; }
+.tod-note-editor .cm-content { min-height: 100%; padding: 9px 10px !important; }
+.tod-note-editor .cm-placeholder { color: var(--text-muted); }
+/* One source-opening control sits inside each content surface, independent of its heading. */
+.tod-source-frame { position: relative; display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; min-height: 0; }
+.tod-source-frame .tod-base-host, .tod-source-frame .tod-folder-list { box-sizing: border-box; padding-block-end: 40px; }
+.tod-note-editor { --tod-source-control-background: var(--background-primary-alt); }
+.tod-note-editor .cm-content { padding-block-end: 40px !important; }
+.tod-shell button.tod-open-source { position: absolute; z-index: 2; inset-block-end: 6px; inset-inline-end: 6px; width: 28px; height: 28px; padding: 6px; border: 0; border-radius: var(--radius-m); background: var(--tod-source-control-background, var(--background-primary)); color: var(--text-muted); }
+.tod-shell button.tod-open-source:is(:hover, :focus-visible) { background: linear-gradient(var(--background-modifier-hover), var(--background-modifier-hover)), var(--tod-source-control-background, var(--background-primary)); color: var(--text-normal); }
+@media (hover: hover) and (pointer: fine) {
+  .tod-shell button.tod-open-source { opacity: 0; pointer-events: none; transition: opacity 120ms ease; }
+  .tod-shell .tod-widget:is(:hover, :focus-visible, :has(:focus-visible)) button.tod-open-source:not(.tod-open-note),
+  .tod-shell .tod-card:is(:hover, :has(:focus-visible)) button.tod-open-note,
+  .tod-shell button.tod-open-source:focus-visible { opacity: 1; pointer-events: auto; }
+}
+@media (pointer: coarse) {
+  .tod-note-editor .cm-content { padding-block-end: 56px !important; }
+  .tod-source-frame .tod-base-host, .tod-source-frame .tod-folder-list { padding-block-end: 56px; }
+}
+.tod-note-status { color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 16px; overflow-wrap: anywhere; }
+.tod-note-status:not(.has-error) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tod-note-status.has-error { flex-shrink: 0; margin-top: 8px; color: var(--text-warning); }
+.tod-note-actions:empty { display: none; }
+.tod-note-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.tod-note-actions button, .tod-empty-copy button { height: auto; min-height: 28px; padding: 5px 9px; white-space: normal; font-size: var(--font-ui-small); }
+.tod-recents.is-empty { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+.tod-empty-state { display: flex; flex: 1 1 auto; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; width: 100%; min-width: 0; min-height: 0; padding: 2px 0; }
+.tod-empty-copy { flex: 0 0 auto; max-width: 34ch; color: var(--text-muted); font-size: var(--font-ui-small); }
+.tod-empty-copy p { margin: 0; line-height: 1.5; }
+.tod-empty-copy button { margin-top: 8px; }
+.tod-widget-daily .tod-daily-empty { flex: 0 0 auto; justify-content: flex-start; padding: 0; }
+.tod-daily-empty .tod-empty-copy { max-width: 100%; }
+.tod-shell .tod-daily-empty button { display: inline-flex; align-items: center; justify-content: flex-start; gap: 7px; max-width: 100%; min-height: 30px; margin: 0; padding: 5px 9px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: transparent; box-shadow: none; color: var(--text-muted); font-size: var(--font-ui-small); line-height: 20px; text-align: left; }
+.tod-shell .tod-daily-empty button:hover:not(:disabled) { background: var(--background-modifier-hover); color: var(--text-normal); }
+.tod-daily-empty .tod-empty-copy p:not([hidden]) + button { margin-top: 8px; }
+.tod-daily-create-icon { display: flex; flex: 0 0 auto; }
+.tod-daily-create-icon svg { width: 14px; height: 14px; }
+@container tod-home (max-width: 1050px) {
+  .tod-widgets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tod-widget[data-columns="3"], .tod-widget[data-columns="4"] { grid-column: span 2; }
+}
+@container tod-home (max-width: 600px) {
+  .tod-shell { padding: 16px 14px 24px; }
+  .tod-header { gap: 10px; }
+  .tod-header h1 { font-size: 20px; line-height: 26px; }
+  .tod-widgets { grid-template-columns: minmax(0, 1fr); }
+  .tod-widget[data-columns] { grid-column: 1; }
+  .tod-shell { --tod-widget-padding: 12px; }
+}
+@media (pointer: coarse) {
+  .tod-shell { --tod-row-height: 88px; --tod-widget-heading-height: 44px; --tod-control-size: 44px; --tod-content-control-size: 44px; --tod-widget-padding: 22px; --tod-gap: 26px; padding-inline: 24px; }
+  .tod-quick-actions { margin-bottom: 26px; }
+  /* Keep full touch targets together; the pill scrolls when the card is narrow. */
+  .tod-widget-controls button.tod-widget-action svg { width: 18px; height: 18px; }
+  .tod-shell .tod-card-heading button.tod-card-title { align-items: center; }
+  .tod-card-label { align-self: center; }
+  .tod-note-symbol, .tod-stack-symbol { height: 44px; }
+  .tod-shell button.tod-icon-button, .tod-shell button.tod-widget-size { min-width: 44px; min-height: 44px; }
+  .tod-shell button.tod-recent-link, .tod-shell button.tod-quick-action { min-height: 44px; }
+  .tod-note-editor > .markdown-source-view { font-size: 16px; }
+  .tod-empty-copy button, .tod-shell .tod-daily-empty button { min-height: 44px; }
+}
+
+/* Note and collection actions stay with their content. */
+.tod-shell button.tod-reorder-note {
+  opacity: 1; pointer-events: auto; transition: opacity 120ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tod-shell button.tod-reorder-note {
+    opacity: 0; pointer-events: none;
+  }
+  .tod-shell :is(.tod-card, .tod-stack-note-row):is(:hover, :has(:focus-visible), .is-dragging) .tod-reorder-note {
+    opacity: 1; pointer-events: auto;
+  }
+}
+/* The active preview owns its controls. Keep the cover's space, without duplicate actions. */
+.tod-shell .tod-note-cover.is-open :is(.tod-metadata-actions, .tod-reorder-note) { visibility: hidden; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .tod-shell.tod-stack-popover, .tod-shell.tod-folder-popover, .tod-shell.tod-note-popover { animation: none; }
+  .tod-shell button.tod-source-grip, .tod-shell button.tod-open-source { transition: none; }
+  .tod-shell button.tod-reorder-note { transition: none; }
+}
+
+/* Match group headings to the label inset inside the native settings box. */
+.tod-settings-page .setting-group > .setting-item-heading {
+  padding-inline: calc(var(--setting-items-padding-x, 20px) + var(--setting-items-border-width, 0px));
+}
+
+.tod-size-picker { --tod-size-unit: 26px; --tod-size-gap: 4px; position: fixed; z-index: var(--layer-popover, 100); box-sizing: border-box; width: max(148px, calc(22px + var(--tod-size-columns, 4) * (var(--tod-size-unit) + var(--tod-size-gap)) - var(--tod-size-gap))); max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; padding: 10px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); box-shadow: var(--shadow-s); color: var(--text-normal); }
+.tod-size-picker-title { margin: 0 0 6px; font-size: var(--font-ui-small); font-weight: 600; line-height: 20px; }
+.tod-size-picker-grid { display: grid; width: max-content; margin-inline: auto; grid-template-columns: repeat(var(--tod-size-columns, 4), var(--tod-size-unit)); grid-auto-rows: var(--tod-size-unit); gap: var(--tod-size-gap); }
+.tod-size-picker button.tod-size-cell { position: relative; display: block; box-sizing: border-box; width: 100%; height: 100%; min-width: 0; min-height: 0; padding: 0; border: 1px solid var(--background-modifier-border); border-radius: 3px; background: var(--background-primary-alt); box-shadow: none; cursor: pointer; }
+.tod-size-picker button.tod-size-cell.is-highlighted { border-color: var(--interactive-accent); background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-primary)); }
+.tod-size-picker button.tod-size-cell:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.tod-size-picker-caption { min-width: 0; min-height: 18px; margin-top: 8px; font-size: var(--font-ui-smaller); line-height: 18px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+@media (pointer: coarse) { .tod-size-picker { --tod-size-unit: 44px; } }
+
+
+/* Widget sources and the picker follow the same compact spacing as the desk. */
+.suggestion-item.tod-add-result { display: block; }
+.tod-add-choice { display: flex; align-items: center; gap: 10px; }
+.tod-add-choice-icon { display: inline-flex; flex: 0 0 auto; color: var(--text-muted); }
+.tod-add-choice-icon svg { width: 18px; height: 18px; }
+.tod-add-choice-text { min-width: 0; flex: 1; }
+.tod-add-status { flex: 0 0 auto; white-space: nowrap; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.tod-add-section { color: var(--text-muted); font-size: var(--font-ui-smaller); font-weight: var(--font-medium); padding: 8px 0 6px; }
+.tod-add-choice-text > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tod-widget:focus-visible { outline: 2px solid var(--background-modifier-border-focus); outline-offset: 2px; }
+.tod-widget-folder > .tod-source-frame > .tod-widget-body, .tod-widget-recents > .tod-widget-body { overflow: hidden; }
+.tod-folder-navigation { display: flex; align-items: center; flex: 0 0 auto; gap: 3px; min-width: 0; margin-bottom: 6px; padding: 0 2px 4px; overflow-x: auto; scrollbar-width: none; }
+.tod-shell button.tod-folder-crumb { flex: 0 0 auto; max-width: 160px; height: 24px; min-width: 0; margin: 0; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: var(--radius-s); background: transparent; box-shadow: none; color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 20px; }
+.tod-shell button.tod-folder-crumb:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.tod-shell button.tod-folder-crumb[aria-current] { color: var(--text-normal); font-weight: 500; cursor: default; }
+.tod-folder-separator, .tod-folder-enter { display: flex; flex: 0 0 auto; color: var(--text-faint); }
+.tod-folder-separator svg, .tod-folder-enter svg { width: 12px; height: 12px; }
+.tod-folder-row { position: relative; display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tod-shell button.tod-folder-link { flex: 1 1 0; width: 0; }
+.tod-folder-enter { margin-left: auto; padding: 0 3px; }
+.tod-widget-folder .tod-empty-state, .tod-widget-base .tod-empty-state { flex: 0 0 auto; justify-content: flex-start; }
+.modal.tod-widget-dialog { --tod-dialog-inset: 20px; box-sizing: border-box; display: flex; flex-direction: column; width: 440px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 48px); padding: var(--tod-dialog-inset); }
+.modal.tod-widget-dialog .tod-dialog-heading { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; min-width: 0; height: auto; margin: 0 0 10px; padding: 0; }
+.modal.tod-widget-dialog .modal-title { box-sizing: border-box; display: block; flex: 1 1 0; min-width: 0; min-height: 0; max-width: none; margin: 0; padding: 0; overflow-wrap: anywhere; font-size: var(--font-ui-medium); font-weight: 600; line-height: 1.4; text-align: start; }
+.modal.tod-widget-dialog button:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; box-shadow: none; }
+.modal.tod-widget-dialog button.tod-dialog-close { position: static; display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; box-sizing: border-box; width: 28px; height: 28px; margin: 0; padding: 5px; border: 0; border-radius: var(--radius-s); box-shadow: none; background: transparent; color: var(--text-muted); }
+.modal.tod-widget-dialog button.tod-dialog-close svg { width: 16px; height: 16px; }
+.modal.tod-widget-dialog button.tod-dialog-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.modal.tod-widget-dialog button.tod-dialog-close:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
+.tod-widget-dialog .modal-content { flex: 0 1 auto; min-height: 0; margin: 0; padding: 0; overflow-y: auto; scrollbar-width: thin; }
+.tod-widget-dialog [hidden] { display: none !important; }
+.tod-widget-form { display: flex; flex-direction: column; gap: 16px; }
+.tod-widget-field { display: flex; flex-direction: column; min-width: 0; gap: 6px; font-size: var(--font-ui-small); font-weight: 500; }
+.tod-widget-field-label { display: flex; align-items: baseline; gap: 8px; }
+.tod-field-optional { font-size: var(--font-ui-smaller); font-weight: 400; color: var(--text-muted); }
+.tod-widget-field input, .tod-widget-field select { box-sizing: border-box; width: 100%; min-width: 0; height: 34px; margin: 0; padding: 0 10px; font-size: var(--font-ui-small); font-weight: 400; text-align: left; }
+/* Keep field focus inside its bounds so the modal scroller cannot crop it. */
+.modal.tod-widget-dialog .tod-widget-field :is(input, select, textarea):focus { outline: 2px solid var(--background-modifier-border-focus, var(--interactive-accent)); outline-offset: -2px; border-color: var(--background-modifier-border-focus, var(--interactive-accent)); box-shadow: none; }
+.tod-source-path { color: var(--text-muted); font-size: var(--font-ui-smaller); font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+.tod-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.tod-dialog-actions button { min-height: 30px; font-size: var(--font-ui-small); }
+@media (pointer: coarse) {
+  .modal.tod-widget-dialog button.tod-dialog-close { width: 44px; height: 44px; padding: 12px; }
+  .tod-shell button.tod-folder-crumb, .tod-shell button.tod-folder-link, .tod-shell button.tod-source-grip, .tod-widget-field input, .tod-widget-field select, .tod-dialog-actions button { min-height: 44px; }
+  .tod-shell button.tod-source-grip { width: 44px; }
+}
+
+.tod-widget-field textarea.tod-collection-description-input { box-sizing: border-box; width: 100%; min-height: 88px; max-height: 180px; resize: vertical; padding: 8px 10px; font: inherit; font-weight: 400; line-height: 1.5; }
+.tod-widget-dialog .tod-edit-options { --setting-items-background: transparent; --setting-items-border-width: 0px; --setting-items-divider-width: 0px; display: flex; flex-direction: column; gap: 0; }
+.tod-widget-dialog .tod-edit-options .setting-item { box-sizing: border-box; display: flex; align-items: flex-start; min-height: 36px; margin: 0; padding: 6px 0; border: 0; border-radius: 0; background: transparent; gap: 12px; }
+.tod-widget-dialog .tod-edit-options .setting-item::before { display: none; content: none; }
+.tod-widget-dialog .tod-edit-options .setting-item-info { flex: 1 1 auto; min-width: 0; margin: 0; }
+.tod-widget-dialog .tod-edit-options .setting-item-control { flex: 0 0 auto; align-self: flex-start; min-height: 22px; margin: 0; padding: 0; }
+.tod-widget-dialog .tod-edit-options .setting-item-name { color: var(--text-normal); font-size: var(--font-ui-small); font-weight: 400; line-height: 22px; }
+.tod-widget-dialog .tod-edit-options .setting-item-description { padding-top: 2px; font-size: var(--font-ui-smaller); line-height: 18px; }
+.tod-widget-dialog .tod-edit-options .checkbox-container { --toggle-width: 32px; --toggle-thumb-width: 14px; --toggle-thumb-height: 14px; --toggle-border-width: 2px; --toggle-s-width: 32px; --toggle-s-thumb-width: 14px; --toggle-s-thumb-height: 14px; --toggle-s-border-width: 2px; }
+@media (pointer: coarse) {
+  .tod-widget-dialog .tod-edit-options .setting-item { min-height: 44px; }
+  .tod-widget-dialog .tod-edit-options .checkbox-container::before { inset: -13px -6px; }
+}
+
+/* Secondary Edit actions stay separate from the form's Save and Cancel controls. */
+.tod-widget-dialog .tod-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 16px; border-top: 1px solid var(--background-modifier-border); }
+.tod-widget-dialog .tod-edit-actions button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; font-size: var(--font-ui-small); }
+.tod-widget-dialog .tod-edit-actions button > span:first-child { display: inline-flex; flex: 0 0 16px; width: 16px; height: 16px; color: var(--text-muted); }
+.tod-widget-dialog .tod-edit-actions svg { width: 16px; height: 16px; }
+@media (pointer: coarse) { .tod-widget-dialog .tod-edit-actions button { min-height: 44px; } }
+
+/* Writing activity uses the desk's accent and measured square cells. */
+.tod-widget-activity { padding-block-end: var(--tod-widget-padding); }
+.tod-writing-activity { display: flex; flex-direction: column; align-items: flex-start; align-self: stretch; flex: 1 1 auto; width: 100%; max-width: 100%; min-width: 0; min-height: 0; gap: 4px; }
+.tod-writing-activity.is-vertical { align-items: center; align-self: center; }
+.tod-writing-chart { box-sizing: border-box; display: grid; grid-template-columns: var(--tod-calendar-label-width, 36px) auto; grid-template-rows: max-content auto; flex: 0 1 auto; gap: 6px 8px; align-self: center; font-size: var(--tod-meta-font-size); line-height: max(var(--tod-meta-line-height), 1.4em); width: max-content; max-width: 100%; min-width: 0; min-height: 0; padding: 3px; overflow: auto; overscroll-behavior: auto; }
+.tod-writing-weekdays { display: grid; grid-area: 2 / 1; grid-template-rows: repeat(7, var(--tod-day-size)); gap: 3px; color: var(--text-muted); font-size: inherit; }
+.tod-writing-weekdays > span { display: flex; align-items: center; line-height: 1; }
+.tod-writing-months { min-width: 0; display: grid; grid-area: 1 / 2; grid-template-columns: repeat(var(--tod-weeks), var(--tod-day-size)); column-gap: 3px; color: var(--text-muted); font-size: inherit; line-height: inherit; }
+.tod-writing-months > span { grid-row: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tod-writing-days { display: grid; grid-area: 2 / 2; grid-template-rows: repeat(7, var(--tod-day-size)); grid-auto-columns: var(--tod-day-size); grid-auto-flow: column; gap: 3px; }
+.tod-writing-activity.is-vertical .tod-writing-weekdays { grid-area: 1 / 2; grid-template-columns: repeat(7, var(--tod-day-size)); grid-template-rows: auto; }
+.tod-writing-activity.is-vertical .tod-writing-weekdays > span { justify-content: center; }
+.tod-writing-activity.is-vertical .tod-writing-months { grid-area: 2 / 1; grid-template-columns: var(--tod-calendar-label-width, 36px); grid-template-rows: repeat(var(--tod-weeks), var(--tod-day-size)); row-gap: 3px; }
+.tod-writing-activity.is-vertical .tod-writing-months > span { grid-column: 1; align-self: center; }
+.tod-writing-activity.is-vertical .tod-writing-days { grid-template-columns: repeat(7, var(--tod-day-size)); grid-template-rows: repeat(var(--tod-weeks), var(--tod-day-size)); grid-auto-columns: auto; grid-auto-flow: row; }
+.tod-shell button.tod-writing-day, .tod-writing-sample { box-sizing: border-box; display: block; width: var(--tod-day-size, 9px); height: var(--tod-day-size, 9px); min-width: 0; min-height: 0; margin: 0; padding: 0; border: 1px solid var(--background-modifier-border); border-radius: 2px; box-shadow: none; background: var(--background-primary-alt); }
+.tod-shell button.tod-writing-day { cursor: pointer; --no-tooltip: true; }
+.tod-shell .tod-writing-day.is-untracked { background: transparent; opacity: .5; }
+.tod-widget-activity :is(.tod-writing-day, .tod-writing-sample)[data-level="1"]:not(.is-untracked) { background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-primary)); border-color: color-mix(in srgb, var(--interactive-accent) 35%, var(--background-modifier-border)); }
+.tod-widget-activity :is(.tod-writing-day, .tod-writing-sample)[data-level="2"]:not(.is-untracked) { background: color-mix(in srgb, var(--interactive-accent) 45%, var(--background-primary)); border-color: transparent; }
+.tod-widget-activity :is(.tod-writing-day, .tod-writing-sample)[data-level="3"]:not(.is-untracked) { background: color-mix(in srgb, var(--interactive-accent) 70%, var(--background-primary)); border-color: transparent; }
+.tod-widget-activity :is(.tod-writing-day, .tod-writing-sample)[data-level="4"]:not(.is-untracked) { background: var(--interactive-accent); border-color: transparent; }
+.tod-shell button.tod-writing-day.is-today { outline: 1px solid var(--text-muted); outline-offset: 1px; }
+.tod-shell button.tod-writing-day:is(:hover, :focus-visible) { outline: 2px solid var(--interactive-accent); outline-offset: 1px; opacity: 1; }
+/* Reserve both wrapping metadata pills before measuring the calendar. */
+.tod-writing-footer { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; justify-content: center; align-self: stretch; min-width: 0; gap: var(--tod-meta-gap); margin-top: auto; }
+.tod-shell .tod-writing-total.tod-metadata-pill { flex: 0 1 auto; }
+.tod-shell .tod-writing-legend.tod-metadata-pill { justify-content: center; flex: 0 0 auto; }
+.tod-writing-legend .tod-writing-sample { flex: 0 0 8px; width: 8px; height: 8px; }
+.tod-writing-legend-label:first-child { margin-inline-end: 3px; }
+.tod-writing-legend-label:last-child { margin-inline-start: 3px; }
+.tod-writing-error { box-sizing: border-box; width: 100%; min-width: 0; align-self: stretch; color: var(--text-warning); font-size: var(--font-ui-smaller); line-height: 18px; overflow-wrap: anywhere; }
+.tod-tooltip { position: fixed; z-index: var(--layer-tooltip, 1000); top: 0; left: 0; box-sizing: border-box; width: max-content; max-width: calc(100vw - 16px); padding: 6px 9px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-s); font-size: var(--font-ui-small); line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; pointer-events: none; }
+.tod-tooltip[hidden] { display: none; }
+/* Owned tooltips prevent duplicate native bubbles on these controls. */
+.tod-control-tooltip-surface :is(.tod-widget-controls button, button.tod-icon-button, button.tod-open-source, button.tod-add-to-desk) { --no-tooltip: true; }
+@media (forced-colors: active) {
+  .tod-shell button.tod-writing-day, .tod-writing-sample { forced-color-adjust: none; background: Canvas; border-color: GrayText; }
+  .tod-widget-activity :is(.tod-writing-day, .tod-writing-sample)[data-level]:not([data-level="0"]):not(.is-untracked) { background: Highlight; border-color: Highlight; }
+}
+
+.tod-stack-empty { margin: 0; padding: 8px var(--tod-list-inset); color: var(--text-muted); font-size: var(--font-ui-small); line-height: 1.5; }
+.tod-undo-notice { display: flex; align-items: center; gap: 8px; }
+.tod-undo-notice > span { min-width: 0; overflow-wrap: anywhere; }
+.tod-undo-popup { position: fixed; z-index: var(--layer-notice, 1000); box-sizing: border-box; max-width: min(300px, calc(100vw - 24px)); padding: 4px 6px 4px 10px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); box-shadow: var(--shadow-s, 0 2px 6px #0001); color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 1.4; }
+.tod-undo-notice button { flex-shrink: 0; height: auto; min-height: 28px; padding: 2px 6px; border: 0; border-radius: var(--radius-s); box-shadow: none; background: transparent; color: inherit; font: inherit; font-weight: 500; cursor: pointer; }
+.tod-undo-popup button { color: var(--text-accent); }
+@media (pointer: coarse) { .tod-undo-notice button { min-height: 44px; min-width: 44px; } }
+.tod-undo-notice button:is(:hover, :focus-visible) { background: var(--background-modifier-hover); }
+.tod-undo-notice button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+/* A destination is a grid cell, including empty space, rather than another card. */
+.tod-widget-drop-preview { position: absolute; z-index: 6; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 12px; border: 2px dashed var(--interactive-accent); border-radius: var(--radius-l); background: color-mix(in srgb, var(--interactive-accent) 12%, transparent); color: var(--text-accent); font-size: var(--font-ui-small); font-weight: 600; pointer-events: none; }
+.tod-widgets:is(.is-widget-dragging, .is-widget-placing) { isolation: isolate; }
+.tod-widget-drop-label { max-width: 100%; padding: 5px 8px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); text-align: center; line-height: 1.4; }
+.tod-widgets.is-widget-placing, .tod-widgets.is-widget-placing > .tod-widget { cursor: crosshair; }
+.tod-widgets.is-widget-placing .tod-widget.is-placing { border-color: var(--interactive-accent); }
+.tod-widgets.is-widget-placing :is(.tod-widget-body, .tod-widget-body *, .tod-section-heading, .tod-section-heading *, .tod-open-source) { pointer-events: none !important; }
+.tod-layout-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Destination outlines explain collisions while every real section remains stationary. */
+.tod-widget-shift-preview { position: absolute; z-index: 5; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 8px; border: 1px dashed var(--interactive-accent); border-radius: var(--radius-l); background: color-mix(in srgb, var(--interactive-accent) 6%, transparent); color: var(--text-muted); font-size: var(--font-ui-smaller); pointer-events: none; }
+.tod-widget-shift-preview.is-source-drop { border: 2px dashed var(--interactive-accent); background: color-mix(in srgb, var(--interactive-accent) 12%, transparent); color: var(--text-accent); }
+
+.tod-list-identity, .tod-choice-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; gap: 2px; }
+/* These are vertical text lines; horizontal title flex must not collapse their height. */
+.tod-list-identity > span, .tod-choice-text > span { flex: 0 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tod-shell .tod-recents-date { grid-column: 1 / -1; min-width: 0; margin: 12px 0 4px; padding: 0; padding-inline-start: calc(var(--tod-identity-icon-size) + var(--tod-list-gap)); color: var(--tod-meta-color); font-size: var(--tod-meta-font-size); font-weight: 500; line-height: var(--tod-meta-line-height); }
+.tod-shell .tod-recents-date:first-child { margin-top: 0; }
+.tod-shell input.tod-collection-search, .tod-widget-dialog input.tod-collection-search { box-sizing: border-box; flex: 0 0 auto; width: 100%; min-width: 0; height: 32px; margin: 0 0 8px; padding: 6px 8px; font-size: var(--font-ui-small); }
+.tod-widget-form > input.tod-collection-search { margin-bottom: 0; }
+.tod-shell input.tod-collection-search:focus, .tod-widget-dialog input.tod-collection-search:focus { outline: 2px solid var(--interactive-accent); outline-offset: -2px; box-shadow: none; }
+.tod-form-help { margin: 0; color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 1.5; }
+.tod-form-error { margin: 0; color: var(--text-error); font-size: var(--font-ui-small); }
+.tod-note-choices { max-height: min(36dvh, 320px); min-height: 60px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.tod-note-choice { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 40px; padding: 6px 8px; border-radius: var(--radius-s); cursor: pointer; }
+.tod-note-choice:hover { background: var(--background-modifier-hover); }
+.tod-note-choice input { flex: 0 0 auto; margin: 0; }
+.tod-note-choice .tod-choice-text { font-size: var(--font-ui-small); }
+.tod-capture-preview { margin: 0; max-height: 100px; padding: 8px 12px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-muted); font-size: var(--font-ui-small); border-left: 2px solid var(--background-modifier-border); }
+.tod-shell button.tod-scratch-selection { position: absolute; left: 6px; bottom: 6px; z-index: 2; max-width: calc(100% - 54px); height: 26px; padding: 3px 8px; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); background: var(--background-primary-alt); box-shadow: none; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.tod-shell button.tod-scratch-selection:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.tod-control-tooltip-surface :is(button.tod-resume-note, button.tod-scratch-selection, button.tod-widget-stack-indicator) { --no-tooltip: true; }
+.tod-browser-backdrop { position: fixed; inset: 0; z-index: calc(var(--layer-popover, 100) - 1); background: rgba(0, 0, 0, 0.22); }
+.tod-browser-backdrop[hidden] { display: none; }
+.tod-shell.is-sheet { max-width: none; padding: 16px 12px max(12px, env(safe-area-inset-bottom)); border-radius: var(--radius-l); animation: none; }
+.tod-shell.is-sheet .tod-stack-popover-header { min-height: 44px; }
+.tod-shell.is-sheet .tod-stack-popover-actions button { width: 44px; height: 44px; padding: 12px; }
+@media (pointer: coarse) {
+  .tod-shell button.tod-scratch-selection { height: 44px; max-width: calc(100% - 62px); }
+  .tod-shell input.tod-collection-search, .tod-widget-dialog input.tod-collection-search { height: 44px; font-size: 16px; }
+  .tod-note-choice { min-height: 44px; }
+}
+
+.tod-add-choice .tod-add-choice-text > .tod-source-path { white-space: normal; }
+
+@media (pointer: coarse) {
+  .tod-shell .tod-stack-note-row button.tod-icon-button { width: 44px; height: 44px; padding: 12px; }
+  .tod-shell.is-sheet .tod-last-worked-marker .tod-last-worked-label { display: none; }
+}
+
+.tod-shell .tod-collection-more { display: flex; justify-content: center; padding: 8px 0 2px; }
+.tod-shell .tod-collection-more button { min-height: 32px; font-size: var(--font-ui-small); }
+@media (pointer: coarse) { .tod-shell .tod-collection-more button { min-height: 44px; } }
+
+@media (max-width: 480px) { .modal.tod-widget-dialog { --tod-dialog-inset: 16px; } }
+
+/* Item controls are local and never take part in layout. */
+.tod-header h1[role="button"] { cursor: text; }
+.tod-header h1[role="button"]:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 4px; border-radius: var(--radius-s); }
+.tod-widget-controls { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 100ms ease, visibility 0s 100ms; }
+.tod-widget:is(.is-controls-open, .is-placing, :focus-visible, :has(:focus-visible)) > .tod-widget-controls,
+.tod-widget-controls:has(button[aria-expanded="true"]) { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.tod-shell button.tod-item-tools-toggle { display: none; position: absolute; z-index: 8; inset-block-start: 3px; inset-inline-end: 3px; color: var(--text-faint); background: var(--background-primary); }
+@media (hover: hover) and (pointer: fine) {
+  .tod-widget:hover > .tod-widget-controls { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 180ms; }
+  /* Titles handle pointer dragging. Retain Move for keyboard placement and hidden headings. */
+  .tod-shell .tod-widget.has-drag-heading:not(:focus-visible):not(:has(:focus-visible)) > .tod-widget-controls button.tod-widget-grip[aria-pressed="false"] { display: none; }
+}
+@media (hover: none), (pointer: coarse) {
+  .tod-shell button.tod-item-tools-toggle { display: inline-flex; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 14px; }
+  .tod-widget-cover button.tod-item-tools-toggle, .tod-widget-compact button.tod-item-tools-toggle { background: var(--background-primary-alt); }
+  .tod-widget-cover .tod-card-heading, .tod-widget > .tod-section-heading { padding-inline-end: 24px; }
+  .tod-widget.is-controls-open > button.tod-item-tools-toggle { color: var(--text-accent); }
+  .tod-shell .tod-widget > .tod-widget-controls { inset-inline-end: 48px; max-width: calc(100% - 54px); }
+}
+@media (prefers-reduced-motion: reduce) { .tod-widget-controls { transition: none; } }
+
+/* Type icons share the metadata pill and align with the content source action. */
+.tod-widget-widget-stack { --tod-stack-rail-height: var(--tod-pill-height); --tod-stack-source-size: max(28px, var(--tod-content-control-size)); --tod-stack-source-inset: 7px; --tod-stack-rail-inset: calc(var(--tod-stack-source-inset) + (var(--tod-stack-source-size) - var(--tod-stack-rail-height)) / 2); --tod-stack-overlay-clearance: calc(var(--tod-stack-rail-inset) + var(--tod-stack-rail-height) + 4px); }
+.tod-widget-widget-stack > .tod-widget-body { overflow: hidden; }
+.tod-widget.is-stack-member { flex: 1 1 0; height: 100%; border: 0; padding: 0; border-radius: 0; background: transparent; }
+.tod-widget.is-stack-member.tod-widget-compact { --tod-source-control-background: var(--background-primary); }
+.tod-widget.is-stack-member > :is(.tod-widget-controls, .tod-item-tools-toggle) { display: none !important; }
+.tod-widget.is-stack-member.tod-widget-cover .tod-card { padding: 0 0 var(--tod-stack-overlay-clearance); border: 0; background: transparent; }
+/* Stack identities retain one row when switching between source types. */
+.tod-widget.is-stack-member .tod-card-heading button.tod-card-title { align-items: center; }
+.tod-widget.is-stack-member .tod-card-label { display: block; align-self: center; white-space: nowrap; }
+.tod-widget-stack-switcher { position: absolute; z-index: 3; inset-block-end: calc(var(--tod-widget-padding) + var(--tod-stack-rail-inset)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: max-content; max-width: calc(100% - 2 * (var(--tod-widget-padding) + var(--tod-stack-source-size) + 12px)); height: var(--tod-stack-rail-height); min-width: 0; padding: 0; border: 0; background: transparent; box-shadow: none; touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
+.tod-shell .tod-widget-stack-indicators { justify-content: center; }
+.tod-shell .tod-widget-stack-indicators > button.tod-widget-stack-indicator { flex-shrink: 1; min-width: 0; padding: 0; touch-action: inherit; }
+.tod-widget-stack-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 1 14px; width: 14px; min-width: 0; height: 14px; color: inherit; opacity: 1; transition: opacity 140ms ease; pointer-events: none; }
+.tod-widget-stack-icon svg { display: block; width: 100%; height: 100%; stroke-width: 2; }
+.tod-widget-stack-indicator.is-continuation .tod-widget-stack-icon { opacity: .45; }
+.tod-widget-stack-indicator:is([aria-current="true"], :hover, :focus-visible) .tod-widget-stack-icon { opacity: 1; }
+/* Editors already contribute a 1 px border; unbordered sources use the same centerline. */
+.tod-shell .tod-widget.is-stack-member .tod-source-frame > button.tod-open-source { inset-block-end: var(--tod-stack-source-inset); }
+.tod-shell .tod-widget.is-stack-member .tod-card-footer button.tod-open-note { position: absolute; inset-block-end: var(--tod-stack-source-inset); width: var(--tod-stack-source-size); height: var(--tod-stack-source-size); padding: 6px; }
+/* Keep the current tab keyboard reachable while the pointer-only surface is hidden. */
+@media (hover: hover) and (pointer: fine) {
+  .tod-widget-stack-switcher { opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
+  .tod-widget-widget-stack:is(:hover, :focus-visible, :has(:focus-visible), .is-controls-open) > .tod-widget-stack-switcher,
+  .tod-widget-stack-switcher.is-swiping { opacity: 1; pointer-events: auto; }
+}
+/* Scroll content can pass underneath; its last line and source action can clear the overlay. */
+.tod-widget.is-stack-member .tod-recents { box-sizing: border-box; padding-block-end: var(--tod-stack-overlay-clearance); }
+.tod-widget.is-stack-member .tod-writing-footer { padding-block-end: var(--tod-stack-overlay-clearance); }
+.tod-shell .tod-widget.is-stack-member button.tod-scratch-selection { inset-block-end: max(6px, var(--tod-stack-overlay-clearance)); }
+.tod-widget.is-stack-member .tod-note-editor .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)) !important; }
+.tod-widget.is-stack-member .tod-note-editor:has(> .tod-scratch-selection) .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 36px)) !important; }
+.tod-widget.is-stack-member .tod-source-frame :is(.tod-base-host, .tod-folder-list) { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+.tod-widget.is-stack-member.tod-widget-source-card > .tod-source-frame > .tod-widget-body { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+.tod-widget.is-stack-member .tod-note-status.has-error:has(+ .tod-note-actions:empty), .tod-widget.is-stack-member .tod-note-actions:not(:empty) { padding-block-end: var(--tod-stack-overlay-clearance); }
+@media (hover: none), (pointer: coarse) {
+  .tod-widget.is-stack-member .tod-note-editor .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)) !important; }
+  .tod-widget.is-stack-member .tod-note-editor:has(> .tod-scratch-selection) .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 52px)) !important; }
+  .tod-widget.is-stack-member .tod-source-frame :is(.tod-base-host, .tod-folder-list) { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+  .tod-widget.is-stack-member.tod-widget-source-card > .tod-source-frame > .tod-widget-body { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tod-widget-stack-switcher, .tod-widget-stack-icon { transition: none; }
+}
+body.tod-pointer-dragging :is(.tod-tooltip, .tooltip) { display: none; }
+body.tod-pointer-dragging [aria-label] { --no-tooltip: true; }
+
+/* Metadata stays within the chosen footprint; long details yield before primary actions. */
+@container tod-cover (max-width: 280px) {
+  .tod-resume-detail { display: none; }
+}
+@container tod-cover (max-height: 120px) {
+  .tod-metadata-group { flex-wrap: nowrap; }
+  .tod-resume-detail { display: none; }
+}
+@container tod-cover (max-height: 120px) and (max-width: 320px) {
+  .tod-resume-label, .tod-resume-note .tod-metadata-icon { display: none; }
+  .tod-resume-compact { display: inline; }
+  .tod-shell button.tod-resume-note { flex-shrink: 0; }
+}
+@container tod-cover (max-height: 120px) and (max-width: 260px) {
+  .tod-metadata-group:has(> .tod-resume-note:not([hidden])) .tod-metadata-summary > .tod-stack-words { display: none; }
+}
+
+/* Collection browsers share a title line and a quiet excerpt/count line. */
+.tod-shell .tod-browser-count.tod-metadata-pill { flex: 0 0 auto; }
+.tod-browser-note { position: relative; align-items: flex-start; gap: 8px; padding: 0 var(--tod-list-inset) 0 0; }
+.tod-browser-note:is(:hover, :has(:focus-visible), .is-menu-open) { background: color-mix(in srgb, var(--background-modifier-hover) 65%, transparent); }
+.tod-shell .tod-browser-note button.tod-folder-link { align-items: flex-start; padding: 4px 0 4px var(--tod-list-inset); }
+.tod-shell .tod-browser-note button.tod-folder-link:hover:not(:disabled) { color: var(--text-normal); }
+.tod-browser-note .tod-list-identity { gap: 1px; }
+.tod-browser-note .tod-browser-heading { display: flex; align-items: baseline; min-width: 0; }
+.tod-browser-heading > .tod-recent-title { flex: 1 1 0; }
+.tod-browser-note .tod-browser-summary { display: flex; align-items: baseline; min-width: 0; min-height: var(--tod-meta-line-height); gap: 12px; color: var(--tod-meta-color); font-size: var(--tod-meta-font-size); line-height: var(--tod-meta-line-height); font-weight: 400; }
+.tod-browser-context { display: flex; flex: 1 1 0; align-items: baseline; gap: 4px; min-width: 0; overflow: hidden; }
+.tod-browser-context > span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: inherit; }
+.tod-browser-excerpt { flex: 1 1 0; }
+.tod-browser-context > .tod-source-path { flex: 0 1 auto; max-width: 100%; }
+.tod-browser-context:has(> .tod-browser-excerpt:not([hidden])) > .tod-source-path { max-width: 45%; }
+.tod-browser-context:has(> .tod-browser-excerpt:not([hidden])) > .tod-source-path::after { content: ' ·'; }
+.tod-browser-words { flex: 0 0 auto; max-width: 50%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tod-meta-color); font: inherit; font-variant-numeric: tabular-nums; }
+.tod-browser-note > .tod-icon-button { margin-top: 2px; }
+/* The existing status remains accessible; its accent uses the leading icon, without another column. */
+.tod-folder-row > .tod-last-worked-marker, .tod-stack-note-row > .tod-last-worked-marker { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tod-folder-row:has(> .tod-last-worked-marker) .tod-recent-file-icon, .tod-shell .tod-browser-note:has(> .tod-last-worked-marker) > button.tod-browser-grip { color: var(--text-accent); }
+/* The file icon doubles as the grip. Only one secondary-action slot is reserved. */
+.tod-stack-note-row { position: relative; display: grid; grid-template-columns: var(--tod-identity-icon-size) minmax(0, 1fr) var(--tod-content-control-size); align-items: start; column-gap: var(--tod-list-gap); padding: 4px var(--tod-list-inset); }
+.tod-shell .tod-stack-note-row button.tod-folder-link { width: 100%; min-height: 20px; padding: 0; }
+.tod-shell .tod-stack-note-row > button.tod-browser-grip { display: flex; align-items: center; justify-content: center; width: 24px; min-width: 24px; height: 24px; min-height: 24px; margin: -2px -4px 0; padding: 4px; opacity: 1; pointer-events: auto; color: var(--text-muted); }
+.tod-browser-grip > span { display: flex; }
+.tod-shell .tod-stack-note-row > button.tod-browser-grip svg { width: var(--tod-identity-icon-size); height: var(--tod-identity-icon-size); }
+.tod-browser-grip > .tod-browser-drag-symbol { display: none; }
+.tod-stack-note-row:is(:hover, :has(:focus-visible), .is-dragging) .tod-browser-file-symbol { display: none; }
+.tod-stack-note-row:is(:hover, :has(:focus-visible), .is-dragging) .tod-browser-drag-symbol { display: flex; }
+.tod-shell .tod-stack-note-row > button.tod-browser-more { margin-top: -2px; }
+@media (hover: hover) and (pointer: fine) {
+  .tod-browser-more { opacity: 0; pointer-events: none; }
+  .tod-stack-note-row:is(:hover, :has(:focus-visible), .is-menu-open) > .tod-browser-more { opacity: 1; pointer-events: auto; }
+}
+@media (pointer: coarse) {
+  .tod-stack-note-row { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+  .tod-shell .tod-stack-note-row > button.tod-browser-grip { align-items: flex-start; width: 44px; min-width: 44px; height: 44px; min-height: 44px; margin: 0; padding: 2px 14px; }
+  .tod-browser-grip > .tod-browser-file-symbol { display: none; }
+  .tod-browser-grip > .tod-browser-drag-symbol { display: flex; }
+  .tod-shell .tod-stack-note-row > button.tod-browser-more { margin-top: 0; }
+  .tod-shell .tod-stack-note-row button.tod-folder-link { min-height: 44px; }
+  .tod-shell:is(.tod-stack-popover, .tod-folder-popover) .tod-stack-popover-identity > .tod-desk-folder-icon,
+  .tod-shell:is(.tod-stack-popover, .tod-folder-popover) .tod-folder-link > .tod-recent-file-icon { flex-basis: 44px; width: 44px; justify-content: center; }
+}
+
+
+/* Small source cards use only identity, optional site context, and playback. */
+.tod-widget.tod-widget-compact { --tod-compact-heading-height: 20px; --tod-compact-gap: 2px; --tod-compact-body-height: var(--tod-content-control-size); justify-content: center; padding: 8px 12px; }
+.tod-widget.tod-widget-compact > .tod-section-heading { min-height: var(--tod-compact-heading-height); margin: 0; }
+.tod-widget.tod-widget-compact > .tod-section-heading > .tod-widget-symbol { height: var(--tod-compact-heading-height); }
+.tod-widget.tod-widget-compact > .tod-section-heading h2 { display: flex; align-items: center; line-height: var(--tod-compact-heading-height); }
+.tod-widget.tod-widget-compact > .tod-section-heading button.tod-widget-title { height: var(--tod-compact-heading-height); min-height: 0; margin: 0; line-height: var(--tod-compact-heading-height); }
+.tod-widget.tod-widget-compact:not(.is-stack-member) > .tod-section-heading { padding-inline-end: 28px; }
+.tod-widget.tod-widget-compact > .tod-source-frame { position: static; flex: 0 0 auto; }
+.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body { flex: 0 0 auto; overflow: visible; gap: 0; padding: 0; }
+.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body:not(:has(> :not([hidden]))) { display: none; }
+.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body:has(> :not([hidden])) { margin-block-start: var(--tod-compact-gap); }
+.tod-shell .tod-widget-compact:not(.is-stack-member) > .tod-source-frame > button.tod-open-source { inset-block-start: calc(50% - 12px); inset-block-end: auto; inset-inline-end: 8px; width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 4px; background: transparent; }
+.tod-shell .tod-widget-compact:not(.is-stack-member):has(> .tod-source-frame > .tod-widget-body > :not([hidden])) > .tod-source-frame > button.tod-open-source { inset-block-start: calc(50% - (var(--tod-compact-gap) + var(--tod-compact-body-height)) / 2 - 12px); }
+.tod-widget-web.tod-widget-compact:has(.tod-compact-site:not([hidden])) { --tod-compact-body-height: var(--tod-meta-line-height); }
+.tod-widget-compact .tod-compact-site { box-sizing: border-box; padding-inline-start: calc(var(--tod-identity-icon-size) + var(--tod-list-gap)); }
+.tod-shell .tod-widget-compact button.tod-source-recovery { height: 24px; min-height: 24px; max-width: 100%; padding: 0; overflow: hidden; text-overflow: ellipsis; border: 0; background: transparent; box-shadow: none; color: var(--text-accent); font: inherit; font-size: var(--tod-meta-font-size); text-align: start; }
+.tod-widget.is-stack-member.tod-widget-compact { --tod-compact-heading-height: var(--tod-widget-heading-height); justify-content: flex-start; padding: 0 0 calc(var(--tod-stack-overlay-clearance) + 8px); }
+.tod-widget.is-stack-member.tod-widget-compact > .tod-section-heading :is(h2, button.tod-widget-title) { line-height: var(--tod-title-line-height); }
+.tod-widget.is-stack-member.tod-widget-compact > .tod-source-frame > .tod-widget-body { padding: 0; }
+/* Inset glyphs align with the heading icon; the track starts under the title. */
+.tod-audio-player { --tod-audio-thumb-size: 10px; --tod-audio-control-size: 24px; box-sizing: border-box; display: flex; align-items: center; gap: 4px; width: calc(100% + 8px); min-width: 0; height: var(--tod-audio-control-size); margin-inline: -4px; cursor: default; }
+.tod-shell button.tod-audio-button { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 24px; width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 4px; border: 0; border-radius: var(--tod-control-radius); box-shadow: none; background: transparent; color: var(--text-muted); }
+.tod-shell button.tod-audio-button:is(:hover, :focus-visible) { color: var(--text-normal); background: var(--background-modifier-hover); }
+.tod-audio-button svg { width: 16px; height: 16px; }
+.tod-audio-time { flex: 0 1 auto; width: var(--tod-audio-time-width, 11ch); min-width: 0; text-align: end; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); font-size: var(--font-ui-smaller); font-variant-numeric: tabular-nums; line-height: 18px; white-space: nowrap; }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek { appearance: none; -webkit-appearance: none; box-sizing: border-box; flex: 1 1 0; width: 0; min-width: 24px; max-width: 100%; height: var(--tod-audio-control-size); min-height: var(--tod-audio-control-size); max-height: var(--tod-audio-control-size); margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; cursor: pointer; }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--interactive-accent) var(--tod-audio-progress, 0%), var(--background-modifier-border) var(--tod-audio-progress, 0%)); }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: var(--tod-audio-thumb-size); height: var(--tod-audio-thumb-size); min-width: var(--tod-audio-thumb-size); max-width: var(--tod-audio-thumb-size); min-height: var(--tod-audio-thumb-size); max-height: var(--tod-audio-thumb-size); margin: calc((3px - var(--tod-audio-thumb-size)) / 2) 0 0; position: relative; top: 0; border: 0; border-radius: 50%; background: var(--interactive-accent); box-shadow: none; opacity: 1; transform: none; transition: none; cursor: pointer; }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek::-moz-range-progress { height: 3px; border-radius: 2px; background: var(--interactive-accent); }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek::-moz-range-track { height: 3px; border-radius: 2px; background: var(--background-modifier-border); }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek::-moz-range-thumb { box-sizing: border-box; width: var(--tod-audio-thumb-size); height: var(--tod-audio-thumb-size); border: 0; border-radius: 50%; background: var(--interactive-accent); box-shadow: none; }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek:focus-visible, .tod-shell button.tod-audio-button:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.tod-shell .tod-audio-player input[type="range"].tod-audio-seek:disabled { cursor: default; opacity: .45; }
+@media (pointer: coarse) {
+  .tod-widget.tod-widget-compact { --tod-compact-heading-height: 22px; --tod-compact-gap: 4px; }
+  .tod-widget.tod-widget-compact:not(.is-stack-member) { padding-inline-end: 52px; }
+  .tod-widget.tod-widget-compact:not(.is-stack-member) > .tod-section-heading { padding-inline-end: 0; }
+  .tod-shell .tod-widget-compact:not(.is-stack-member) > .tod-source-frame > button.tod-open-source { display: none; }
+  .tod-audio-player { --tod-audio-thumb-size: 16px; --tod-audio-control-size: 44px; width: 100%; margin-inline: 0; gap: 6px; }
+  .tod-shell button.tod-audio-button { flex-basis: 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 12px; }
+  .tod-shell .tod-widget-compact button.tod-source-recovery { height: 44px; min-height: 44px; }
+}
