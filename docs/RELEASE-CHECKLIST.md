@@ -1,6 +1,6 @@
 # Release verification — 0.9.50
 
-Prepared 2026-10-19 from the supplied 2026-10-16 handoff. Repository: `justgregb/top-of-the-desk`. Tag: `0.9.50`, without a `v` prefix. Release status: prerelease. License: MIT, selected by Greg on 2026-10-19.
+Prepared 2026-10-19 from the supplied 2026-10-16 handoff. Repository: `justgregb/obsidian-top-of-the-desk`. Tag: `0.9.50`, without a `v` prefix. Release status: prerelease. License: MIT, selected by Greg on 2026-10-19.
 
 ## Completed
 

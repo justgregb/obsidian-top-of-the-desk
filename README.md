@@ -46,7 +46,7 @@ Top of the Desk does not fetch website previews or add an external service. Webs
 
 ## Install manually
 
-Download `main.js`, `manifest.json`, and `styles.css` from the [GitHub release](https://github.com/justgregb/top-of-the-desk/releases/tag/0.9.50). Put the three files in `.obsidian/plugins/top-of-the-desk/` inside your vault, then enable **Top of the Desk** in Community plugins. To update, replace those three files and reload the plugin; keep your existing `data.json`.
+Download `main.js`, `manifest.json`, and `styles.css` from the [GitHub release](https://github.com/justgregb/obsidian-top-of-the-desk/releases/tag/0.9.50). Put the three files in `.obsidian/plugins/top-of-the-desk/` inside your vault, then enable **Top of the Desk** in Community plugins. To update, replace those three files and reload the plugin; keep your existing `data.json`.
 
 This prerelease is version **0.9.50**. Its manifest declares Obsidian **1.11.0+**. The included screenshots were captured on macOS with Obsidian **1.14.4**; minimum-version and mobile verification are still pending. It is not yet listed in the Community directory.
 
