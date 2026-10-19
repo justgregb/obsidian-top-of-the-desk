@@ -1,3 +1,4 @@
+import { isRecord } from './validation';
 import { App, Component, Editor, MarkdownFileInfo, TFile } from 'obsidian';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, placeholder, type ViewUpdate } from '@codemirror/view';
@@ -34,14 +35,15 @@ function editorConstructor(app: App, doc: Document): NativeConstructor {
   const registry = (app as App & {
     embedRegistry: { embedByExtension: { md(context: { app: App; containerEl: HTMLElement }, file: TFile | null, subpath: string): MarkdownEmbed } };
   }).embedRegistry;
-  const containerEl = doc.createElement('div');
+  const containerEl = doc.adoptNode(createFragment()).createDiv();
   const embed = registry.embedByExtension.md({ app, containerEl }, null, '');
   try {
     embed.editable = true;
     embed.showEditor();
     // Embedded note editor -> scrollable Markdown editor, without the embed's file writer.
-    const prototype = Object.getPrototypeOf(Object.getPrototypeOf(embed.editMode!));
-    if (typeof prototype?.set !== 'function' || typeof prototype?.buildLocalExtensions !== 'function') {
+    const editorPrototype: unknown = embed.editMode ? Object.getPrototypeOf(embed.editMode) : null;
+    const prototype: unknown = isRecord(editorPrototype) ? Object.getPrototypeOf(editorPrototype) : null;
+    if (!isRecord(prototype) || typeof prototype.set !== 'function' || typeof prototype.buildLocalExtensions !== 'function' || typeof prototype.constructor !== 'function') {
       throw new Error('Obsidian’s embedded Markdown editor is unavailable');
     }
     const constructor = prototype.constructor as NativeConstructor;
@@ -68,16 +70,28 @@ export class WidgetMarkdownEditor extends Component {
 
   constructor(private app: App, parent: HTMLElement, label: string, hint: string, onChange: (body: string, update: ViewUpdate) => void, onBlur: () => void, onSelection?: (hasSelection: boolean) => void) {
     super();
-    const self = this;
     this.el = parent.createDiv('tod-note-editor');
     this.el.addClass('is-readonly');
+    const file = () => app.vault.getFileByPath(this.path);
+    const editor = () => this.native?.editor;
+    const editMode = () => this.native;
+    const editable = this.editable;
+    const onUpdate = (native: NativeEditor, update: ViewUpdate, changed: boolean): void => {
+      if (update.docChanged) this.body = native.get();
+      if (changed && !this.syncing && !this.readOnly) onChange(this.body, update);
+      if (onSelection && (update.selectionSet || update.docChanged)) {
+        const selection = update.state.selection.main;
+        const available = !this.readOnly && !selection.empty && !!update.state.sliceDoc(selection.from, selection.to).trim();
+        if (available !== this.selectionAvailable) { this.selectionAvailable = available; onSelection(available); }
+      }
+    };
     this.owner = {
       app,
       containerEl: this.el,
       hoverPopover: null,
-      get file() { return app.vault.getFileByPath(self.path); },
-      get editor() { return self.native?.editor; },
-      get editMode() { return self.native; },
+      get file() { return file(); },
+      get editor() { return editor(); },
+      get editMode() { return editMode(); },
       getMode: () => 'source',
       syncScroll: () => {},
     };
@@ -87,19 +101,13 @@ export class WidgetMarkdownEditor extends Component {
         return [
           ...super.buildLocalExtensions(),
           placeholder(hint),
-          self.editable.of([EditorState.readOnly.of(true), EditorView.editable.of(false)]),
+          editable.of([EditorState.readOnly.of(true), EditorView.editable.of(false)]),
           EditorView.contentAttributes.of({ 'aria-label': label, 'aria-multiline': 'true' }),
         ];
       }
       onUpdate(update: ViewUpdate, changed: boolean): void {
         super.onUpdate(update, changed);
-        if (update.docChanged) self.body = this.get();
-        if (changed && !self.syncing && !self.readOnly) onChange(self.body, update);
-        if (onSelection && (update.selectionSet || update.docChanged)) {
-          const selection = update.state.selection.main;
-          const available = !self.readOnly && !selection.empty && !!update.state.sliceDoc(selection.from, selection.to).trim();
-          if (available !== self.selectionAvailable) { self.selectionAvailable = available; onSelection(available); }
-        }
+        onUpdate(this, update, changed);
       }
     }(app, this.el, this.owner);
     this.native.set('', true);
@@ -110,7 +118,7 @@ export class WidgetMarkdownEditor extends Component {
     this.registerDomEvent(this.el, 'mousedown', event => this.focusBlankSpace(event), true);
     this.registerDomEvent(this.el, 'click', event => {
       // Mouse placement is handled on press; don't reset a completed drag selection.
-      if (event.detail === 0 || ['touch', 'pen'].includes((event as PointerEvent).pointerType)) this.focusBlankSpace(event);
+      if (event.detail === 0 || ['touch', 'pen'].includes(event.pointerType)) this.focusBlankSpace(event);
     }, true);
   }
 

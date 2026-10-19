@@ -1,9 +1,11 @@
+import { isRecord, isUnknownArray, stripControls } from './validation';
+import { DeskStatusBar } from './desk-status-bar';
 import { NoteReads } from './note-reads';
 import { SourceCatalog } from './source-catalog';
 import { fileSourceType, isCompactSourceType, isFileWidgetType, isSourceWidgetType, matchesSourceFile, SOURCE_TYPES, SourceType, sourceWebSite, sourceWebUrl } from './source-types';
 import { SourceCardWidget } from './source-card-widget';
 import { COPY, DRAFT_COPY, draftSaved, openSourceLabel } from './copy';
-import { Events, ItemView, Keymap, Modal, Notice, Plugin, PluginSettingTab, SettingGroup, TFile, TFolder, WorkspaceLeaf, normalizePath, parseYaml, setIcon, setTooltip } from 'obsidian';
+import { Events, ItemView, Keymap, Modal, Notice, Plugin, PluginSettingTab, type SettingDefinitionItem, View, TFile, TFolder, WorkspaceLeaf, normalizePath, parseYaml, setIcon, setTooltip } from 'obsidian';
 import { canHideWidgetHeading, canStackWidget, isFixedSizeWidget, isEnabledWidget, isRootWidget, isVisibleWidget, widgetStackFor, widgetStackOwners, widgetHeadingState, itemWidgetId, isCoverWidget, syncDeskWidgets, GridColumns, GridPosition, CollectionCountSettings, DeskItem, DeskSettings, WidgetKey, WidgetSettings, WidgetSize, WIDGET_NAMES, WIDGET_ICONS, widgetDefaults, widgetName, deskPaths, excerpt, itemPaths, normalizeDeskItems, normalizeSettings, removeDeskNote, renamePath, safePath, validRecovery } from './model';
 import { ScratchConflict, ScratchStore } from './scratch';
 import { DailyNoteStore } from './daily';
@@ -57,9 +59,9 @@ export default class DeskPlugin extends Plugin {
   private saveError: Error | null = null;
   private undo = new UndoNotice();
   private opening: Promise<void> | null = null;
-  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshTimer: number | null = null;
   private pendingRefresh: DeskUpdate | undefined;
-  private newTabTimer: ReturnType<typeof setTimeout> | null = null;
+  private newTabTimer: number | null = null;
   private unloaded = false;
   private needsMigrationSave = false;
   private widgetDialogs = new Set<Modal>();
@@ -76,15 +78,17 @@ export default class DeskPlugin extends Plugin {
 
   async onload(): Promise<void> {
     try {
-      const saved = await this.loadData();
+      const loaded: unknown = await this.loadData();
+      const saved = isRecord(loaded) ? loaded : {};
       this.settings = normalizeSettings(saved);
       const collapsedStacks = (raw: unknown, normalized: DeskItem[]): boolean => {
         const stacks = new Set(normalized.filter(item => item.type === 'stack').map(item => item.id));
-        return Array.isArray(raw) && raw.some(item => item?.type === 'stack' && !stacks.has(item.id));
+        return isUnknownArray(raw) && raw.some(item => isRecord(item) && item.type === 'stack' && typeof item.id === 'string' && !stacks.has(item.id));
       };
+      const savedWidgets = isRecord(saved.widgets) ? saved.widgets : {};
       this.needsMigrationSave = saved?.version !== 10 || collapsedStacks(saved?.items, this.settings.items) ||
         collapsedStacks(saved?.putAwayItems, this.settings.putAwayItems) ||
-        Object.entries(this.settings.widgets).some(([id, widget]) => isCompactSourceType(widget.type) && saved?.widgets?.[id]?.showHeading === false);
+        Object.entries(this.settings.widgets).some(([id, widget]) => isCompactSourceType(widget.type) && isRecord(savedWidgets[id]) && savedWidgets[id].showHeading === false);
     }
     catch { new Notice('Couldn’t load Top of the Desk settings. Your saved settings haven’t been changed.'); throw new Error('Desk settings unreadable'); }
     this.addChoicesSignature = this.choiceSignature();
@@ -131,6 +135,7 @@ export default class DeskPlugin extends Plugin {
     this.addCommand({ id: 'choose-base', name: 'Add Base to desk', callback: () => new SourceWidgetModal(this, 'base').open() });
     this.addCommand({ id: 'add-widget', name: 'Customize desk', callback: () => this.focusDeskControls() });
     this.addSettingTab(new DeskSettingTab(this));
+    this.addChild(new DeskStatusBar(this.app, VIEW));
     this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
       if (file instanceof TFile && file.extension === 'md') menu.addItem(item => item
         .setTitle(this.hasNote(file.path) ? COPY.removeFromDesk : COPY.addToDesk)
@@ -224,8 +229,8 @@ export default class DeskPlugin extends Plugin {
     this.unloaded = true; this.clearUndo();
     for (const dialog of [...this.widgetDialogs]) dialog.close();
     this.widgetDialogs.clear();
-    if (this.refreshTimer) clearTimeout(this.refreshTimer);
-    if (this.newTabTimer) clearTimeout(this.newTabTimer);
+    if (this.refreshTimer) window.clearTimeout(this.refreshTimer);
+    if (this.newTabTimer) window.clearTimeout(this.newTabTimer);
     this.scratch?.stop();
     this.daily?.stop();
     this.activity?.stop();
@@ -234,17 +239,17 @@ export default class DeskPlugin extends Plugin {
   }
 
   scheduleNewTabHome(): void {
-    if (this.newTabTimer) clearTimeout(this.newTabTimer);
+    if (this.newTabTimer) window.clearTimeout(this.newTabTimer);
     this.newTabTimer = null;
     const workspace = this.app.workspace;
     if (this.unloaded || !workspace.layoutReady || !this.settings.openOnNewTab) return;
-    const leaf = workspace.activeLeaf;
+    const leaf = workspace.getActiveViewOfType(View)?.leaf;
     if (!leaf || leaf.view.getViewType() !== 'empty') return;
     // File navigation can briefly create an empty leaf. Let it settle before
     // replacing only a blank tab that is still active in the main workspace.
-    this.newTabTimer = setTimeout(() => {
+    this.newTabTimer = window.setTimeout(() => {
       this.newTabTimer = null;
-      if (this.unloaded || !this.settings.openOnNewTab || workspace.activeLeaf !== leaf || leaf.view.getViewType() !== 'empty') return;
+      if (this.unloaded || !this.settings.openOnNewTab || workspace.getActiveViewOfType(View)?.leaf !== leaf || leaf.view.getViewType() !== 'empty') return;
       let inMainWorkspace = false;
       workspace.iterateRootLeaves(candidate => { if (candidate === leaf) inMainWorkspace = true; });
       if (!inMainWorkspace) return;
@@ -322,7 +327,7 @@ export default class DeskPlugin extends Plugin {
     }
     syncDeskWidgets(this.settings);
     // A targeted update must not discard a pending vault/content refresh.
-    if (!update && this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; this.pendingRefresh = undefined; }
+    if (!update && this.refreshTimer) { window.clearTimeout(this.refreshTimer); this.refreshTimer = null; this.pendingRefresh = undefined; }
     const snapshot = JSON.parse(JSON.stringify(this.settings)) as DeskSettings;
     this.saves = this.saves.then(async () => {
       await this.saveData(snapshot); this.saveError = null;
@@ -358,7 +363,7 @@ export default class DeskPlugin extends Plugin {
       return;
     }
     this.pendingRefresh = update;
-    this.refreshTimer = setTimeout(() => {
+    this.refreshTimer = window.setTimeout(() => {
       const pending = this.pendingRefresh;
       this.refreshTimer = null; this.pendingRefresh = undefined; this.refreshViews(pending);
     }, 180);
@@ -377,7 +382,7 @@ export default class DeskPlugin extends Plugin {
   async openDesk(): Promise<void> {
     if (this.opening) return this.opening;
     this.opening = (async () => {
-      const active = this.app.workspace.activeLeaf;
+      const active = this.app.workspace.getActiveViewOfType(View)?.leaf;
       const existing = active?.view.getViewType() === VIEW ? active : this.app.workspace.getLeavesOfType(VIEW)[0];
       if (existing) { await this.app.workspace.revealLeaf(existing); return; }
       const leaf = active?.view.getViewType() === 'empty' ? active : this.app.workspace.getLeaf('tab');
@@ -543,7 +548,7 @@ export default class DeskPlugin extends Plugin {
     if (!item || item.type === 'note') return;
     const surface = this.settings.widgets[itemWidgetId(id)];
     const next = normalizeDeskItems([{ ...item, ...counts, description, ...(item.type === 'stack' ? { name: name ?? item.name } : {}) }])[0];
-    const title = name === undefined ? surface?.title || '' : name.replace(/[\x00-\x1f]/g, '').trim().slice(0, 80);
+    const title = name === undefined ? surface?.title || '' : stripControls(name).trim().slice(0, 80);
     if (JSON.stringify(next) === JSON.stringify(item) && (item.type !== 'folder' || surface?.title === title)) return;
     this.clearUndo();
     if (surface?.type === 'folder') surface.title = title;
@@ -937,7 +942,7 @@ export default class DeskPlugin extends Plugin {
     this.setupScratch(); this.changed({ widgets: ['scratchpad', 'recents'] }); return true;
   }
   previewStamp(file: TFile): string {
-    const summary = this.app.metadataCache.getFileCache(file)?.frontmatter?.summary;
+    const summary: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.summary;
     return JSON.stringify([this.wordCounts.stamp(file), typeof summary === 'string' ? summary : '']);
   }
   folderNotes(folder: TFolder): TFile[] {
@@ -948,7 +953,7 @@ export default class DeskPlugin extends Plugin {
   async preview(file: TFile): Promise<string> {
     const path = file.path, stamp = this.previewStamp(file), cached = this.previewCache.get(path);
     if (cached?.stamp === stamp) return cached.text;
-    const summary = this.app.metadataCache.getFileCache(file)?.frontmatter?.summary;
+    const summary: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.summary;
     const entry = { stamp, text: typeof summary === 'string' && summary.trim()
       ? Promise.resolve(excerpt('', summary))
       : this.noteReads.read(file, this.wordCounts.stamp(file)).then(text => excerpt(text.slice(0, 16000))) };
@@ -966,8 +971,8 @@ export default class DeskPlugin extends Plugin {
     const file = this.app.vault.getFileByPath(path);
     if (!file) return [];
     try {
-      const data = parseYaml(await this.app.vault.cachedRead(file));
-      return Array.isArray(data?.views) ? data.views.map((v: { name?: unknown }) => v?.name).filter((n: unknown): n is string => typeof n === 'string') : [];
+      const data: unknown = parseYaml(await this.app.vault.cachedRead(file));
+      return isRecord(data) && isUnknownArray(data.views) ? data.views.flatMap(view => isRecord(view) && typeof view.name === 'string' ? [view.name] : []) : [];
     } catch { return []; }
   }
 }
@@ -1164,7 +1169,7 @@ class DeskView extends ItemView {
     this.pageTitle.removeAttribute('aria-multiline'); this.pageTitle.removeAttribute('aria-placeholder');
     this.pageTitle.style.removeProperty('--tod-title-height');
     if (save && this.headingEdited) {
-      const heading = (this.pageTitle.textContent || '').replace(/[\r\n\t]/g, ' ').replace(/[\x00-\x1f]/g, '').trim().slice(0, 100);
+      const heading = stripControls((this.pageTitle.textContent || '').replace(/[\r\n\t]/g, ' ')).trim().slice(0, 100);
       if (heading !== this.plugin.settings.pageTitle) {
         this.plugin.settings.pageTitle = heading;
         this.plugin.changed({ widgets: [], content: false, pageHeading: true });
@@ -1401,6 +1406,7 @@ class DeskView extends ItemView {
     input.register(() => this.plugin.activity.flush(activityOwner));
     const openButton = this.createOpenSourceButton(input.el, key, COPY.open);
     if (key === 'scratchpad') {
+      input.el.addClass('has-selection-action');
       selectionButton = input.el.createEl('button', { cls: 'tod-scratch-selection', text: 'Create note', attr: { type: 'button', 'aria-label': 'Create note from selection' } });
       selectionButton.hidden = true; updateTooltip(selectionButton, 'Create note from selection');
       selectionButton.onmousedown = event => event.preventDefault();
@@ -1522,7 +1528,7 @@ class DeskView extends ItemView {
     if (!content) { this.controlTooltips.refresh(); return; }
     if (!requested || change?.layout || requested.has('items')) this.deskItems.render();
     else {
-      const items = new Set([...requested].flatMap(id => settings.widgets[id]?.itemId ? [settings.widgets[id].itemId!] : []));
+      const items = new Set([...requested].flatMap(id => settings.widgets[id]?.itemId ? [settings.widgets[id].itemId] : []));
       if (items.size) this.deskItems.render(false, items);
     }
     if (!requested || change?.layout || requested.has('recents')) this.renderRecents();
@@ -1656,6 +1662,7 @@ class DeskView extends ItemView {
       editor.actions.dataset.action = label; editor.actions.empty();
       if (run) editor.actions.createEl('button', { text: label, attr: { type: 'button' } });
     }
+    editor.status.toggleClass('has-no-actions', !editor.actions.childElementCount);
     // The same retry label can recover either reading or saving; keep its action current.
     const button = editor.actions.firstElementChild as HTMLButtonElement | null;
     if (button) button.onclick = run ?? null;
@@ -1728,48 +1735,48 @@ class DeskSettingTab extends PluginSettingTab {
     super(desk.app, desk);
     this.icon = 'panels-top-left';
   }
-  display(): void { renderSettings(this.containerEl, this.desk); }
-}
-
-function renderSettings(container: HTMLElement, plugin: DeskPlugin): void {
-  container.empty();
-  // Let Obsidian and the user's theme own the settings layout and controls.
-  container.removeClass('tod-settings');
-  container.addClass('tod-settings-page');
-
-  new SettingGroup(container).setHeading('Open desk')
-    .addSetting(setting => setting.setName('On startup')
-      .addToggle(toggle => toggle.setValue(plugin.settings.openOnStartup).onChange(value => {
-        plugin.settings.openOnStartup = value; plugin.changed({ widgets: [], content: false });
-      })))
-    .addSetting(setting => setting.setName('In new tabs')
-      .addToggle(toggle => toggle.setValue(plugin.settings.openOnNewTab).onChange(value => {
-        plugin.settings.openOnNewTab = value; plugin.changed({ widgets: [], content: false }); plugin.scheduleNewTabHome();
-      })));
-
-  new SettingGroup(container).setHeading('Scratchpad')
-    .addSetting(setting => setting.setName('Note path')
-      .setDesc('Created if needed when you write or open it.')
-      .addText(text => {
-        text.setValue(plugin.settings.scratchPath).setPlaceholder('Desk/Scratchpad.md');
-        text.inputEl.addEventListener('change', () => {
-          const path = normalizePath(text.getValue().trim());
-          if (path === plugin.settings.scratchPath) return;
-          text.setDisabled(true);
-          void plugin.setScratchPath(path).catch(() => {
-            new Notice('Couldn’t change the scratchpad note. The current note is still selected.');
-          }).finally(() => {
-            text.setValue(plugin.settings.scratchPath).setDisabled(false);
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    const plugin = this.desk;
+    return [
+      { type: 'group', heading: 'Open desk', items: [
+        { name: 'On startup', aliases: ['Open desk on startup'], render: setting => {
+          setting.addToggle(toggle => toggle.setValue(plugin.settings.openOnStartup).onChange(value => {
+            plugin.settings.openOnStartup = value; plugin.changed({ widgets: [], content: false });
+          }));
+        } },
+        { name: 'In new tabs', aliases: ['Open desk in new tabs'], render: setting => {
+          setting.addToggle(toggle => toggle.setValue(plugin.settings.openOnNewTab).onChange(value => {
+            plugin.settings.openOnNewTab = value; plugin.changed({ widgets: [], content: false }); plugin.scheduleNewTabHome();
+          }));
+        } },
+      ] },
+      { type: 'group', heading: 'Scratchpad', items: [
+        { name: 'Note path', aliases: ['Scratchpad note path'], desc: 'Created if needed when you write or open it.', render: setting => {
+          setting.addText(text => {
+            text.setValue(plugin.settings.scratchPath).setPlaceholder('Desk/Scratchpad.md');
+            text.inputEl.addEventListener('change', () => {
+              const path = normalizePath(text.getValue().trim());
+              if (path === plugin.settings.scratchPath) return;
+              text.setDisabled(true);
+              void plugin.setScratchPath(path).catch(() => {
+                new Notice('Couldn’t change the scratchpad note. The current note is still selected.');
+              }).finally(() => {
+                text.setValue(plugin.settings.scratchPath).setDisabled(false);
+              });
+            });
+            text.inputEl.addEventListener('keydown', event => {
+              if (event.key === 'Enter') { event.preventDefault(); text.inputEl.blur(); }
+            });
           });
-        });
-        text.inputEl.addEventListener('keydown', event => {
-          if (event.key === 'Enter') { event.preventDefault(); text.inputEl.blur(); }
-        });
-      }));
-
-  new SettingGroup(container).setHeading('Daily notes')
-    .addSetting(setting => setting.setName(plugin.daily.available ? 'Settings' : 'Core plugins')
-      .setDesc(plugin.daily.available ? 'Uses Obsidian’s folder, date format, and template.' : COPY.enableDailyNotes)
-      .addButton(button => button.setButtonText(COPY.open).onClick(() => plugin.openSettings(plugin.daily.available ? 'daily-notes' : 'core-plugins'))));
+        } },
+      ] },
+      { type: 'group', heading: 'Daily notes', items: [
+        { name: 'Settings', aliases: ['Daily notes settings', 'Core plugins'],
+          desc: 'Uses Obsidian’s folder, date format, and template.', render: setting => {
+            if (!plugin.daily.available) setting.setDesc(COPY.enableDailyNotes);
+            setting.addButton(button => button.setButtonText(COPY.open).onClick(() => plugin.openSettings(plugin.daily.available ? 'daily-notes' : 'core-plugins')));
+          } },
+      ] },
+    ];
+  }
 }
-

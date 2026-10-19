@@ -1,3 +1,4 @@
+import { stripControls, singleLine } from './validation';
 import { Modal, Setting } from 'obsidian';
 import { COPY } from './copy';
 import type DeskPlugin from './main';
@@ -82,8 +83,8 @@ export class CollectionDetailsModal extends Modal {
     actions.createEl('button', { text: 'Cancel', attr: { type: 'button' } }).onclick = () => this.close();
     const submit = actions.createEl('button', { text: 'Save', cls: 'mod-cta', attr: { type: 'submit' } });
     const details = () => JSON.stringify([
-      name?.value.replace(/[\x00-\x1f]/g, '').trim().slice(0, 80),
-      description.value.replace(/[\x00-\x1f\s]+/g, ' ').trim().slice(0, 240), visibility,
+      name ? stripControls(name.value).trim().slice(0, 80) : undefined,
+      singleLine(description.value).slice(0, 240), visibility,
     ]);
     const initialDetails = details();
     updateSave = () => { submit.disabled = details() === initialDetails && presentation === initialPresentation && !this.editControls?.dirty; };

@@ -25,7 +25,7 @@ export class StackWheelGesture {
         magnitude > previous.magnitude + 0.5 && magnitude >= Math.max(4, previous.trough * 1.6, previous.trough + 3));
     const intent: WheelIntent = fresh
       ? { direction, distance: 0, magnitude, trough: magnitude, lastAt: now, consumedAt: null }
-      : previous!;
+      : previous;
     this.intent = intent;
     intent.lastAt = now; intent.magnitude = magnitude;
     intent.trough = Math.min(intent.trough, magnitude);

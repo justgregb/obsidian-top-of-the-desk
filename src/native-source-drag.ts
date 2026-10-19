@@ -1,3 +1,4 @@
+import { stripControls } from './validation';
 import { TFile, TFolder, type App } from 'obsidian';
 import type { DeskSource } from './widget-layout';
 import { fileSourceType, sourceWebUrl } from './source-types';
@@ -22,7 +23,7 @@ export function deskSourcesForDrag(app: App, drag?: NativeDraggable | null): { s
   };
   const webSource = (value?: string, title?: string): DeskSource | null => {
     const path = sourceWebUrl(value);
-    return path ? { kind: 'web', path, title: typeof title === 'string' ? title.replace(/[\x00-\x1f]/g, '').trim().slice(0, 100) : '' } : null;
+    return path ? { kind: 'web', path, title: typeof title === 'string' ? stripControls(title).trim().slice(0, 100) : '' } : null;
   };
   let candidates: (DeskSource | null)[];
   if (drag.type === 'file' || drag.type === 'folder') candidates = [fileSource(drag.file?.path)];

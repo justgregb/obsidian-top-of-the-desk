@@ -65,6 +65,7 @@ export class WidgetSizePicker extends Component {
     });
     show(initial);
     anchor.setAttribute('aria-expanded', 'true');
+    anchor.closest('.tod-widget-controls')?.addClass('has-expanded-control');
 
     const rect = anchor.getBoundingClientRect();
     const bounds = popup.getBoundingClientRect();
@@ -100,6 +101,7 @@ export class WidgetSizePicker extends Component {
       win.removeEventListener('resize', blurred);
       win.removeEventListener('blur', blurred);
       anchor.setAttribute('aria-expanded', 'false');
+      anchor.closest('.tod-widget-controls')?.removeClass('has-expanded-control');
       popup.remove();
       if (restoreFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
     };

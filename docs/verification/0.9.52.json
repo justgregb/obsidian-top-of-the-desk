@@ -1,0 +1,152 @@
+{
+  "version": "0.9.52",
+  "date": "2026-10-19",
+  "platform": "macOS",
+  "obsidian": "1.14.4",
+  "automatedTests": 38,
+  "sourceLint": "passed; zero warnings",
+  "cssReviewChecks": "passed",
+  "typecheck": "passed",
+  "build": "passed",
+  "packaging": "exactly main.js, manifest.json, styles.css; stale checksum asset removed",
+  "dependencyAudit": "zero vulnerabilities in locked dependencies",
+  "integration": {
+    "passed": 52,
+    "checks": [
+      "Add note",
+      "Duplicate note reuses its item",
+      "Add folder",
+      "Duplicate folder reuses its item",
+      "Add base",
+      "Duplicate base reuses its item",
+      "Add canvas",
+      "Duplicate canvas reuses its item",
+      "Add pdf",
+      "Duplicate pdf reuses its item",
+      "Add audio",
+      "Duplicate audio reuses its item",
+      "Add image",
+      "Duplicate image reuses its item",
+      "Add web",
+      "Duplicate web reuses its item",
+      "Open desk reuses its tab",
+      "Remove leaves original note intact",
+      "Undo restores removed note",
+      "Create note stack",
+      "Reorder stack members",
+      "Unstack preserves both note references",
+      "Desk operations preserve First.md contents",
+      "Desk operations preserve Second.md contents",
+      "Resize image",
+      "Move image",
+      "Mandatory pdf heading is retained",
+      "Mandatory canvas heading is retained",
+      "Mandatory audio heading is retained",
+      "Mandatory web heading is retained",
+      "Stack source items",
+      "Switch source stack member",
+      "Unstack source items",
+      "Renamed note remains on desk",
+      "File and folder opening times are recorded",
+      "History expires at seven local calendar days",
+      "Unused scratchpad does not create a file",
+      "Scratchpad saves exact Markdown",
+      "Scratchpad external edit is protected",
+      "Scratchpad conflict copy preserves both versions",
+      "Folder rename preserves references and pending draft",
+      "Daily note saves",
+      "Daily note external edit is protected",
+      "Daily conflict recovery retains draft",
+      "Embedded editor writes through guarded scratch store",
+      "Actual editor updates writing activity once",
+      "Switching writing tools retains saved editor text",
+      "Mute control works",
+      "Audio plays",
+      "Audio seek works",
+      "Audio pause works",
+      "All current settings persist to disk"
+    ],
+    "durationMs": 286,
+    "version": "0.9.52"
+  },
+  "reload": {
+    "reload": true,
+    "version": "0.9.52"
+  },
+  "reviewUI": {
+    "passed": 24,
+    "checks": [
+      "Desk hides the status bar through local window state",
+      "Opening another view restores the status bar",
+      "Returning to the desk restores its status-bar state",
+      "Hidden elements stay hidden with daily selected",
+      "daily retains its editor inset without important overrides",
+      "Hidden elements stay hidden with scratchpad selected",
+      "scratchpad retains its editor inset without important overrides",
+      "Hidden elements stay hidden with daily selected",
+      "daily retains its editor inset without important overrides",
+      "Hidden elements stay hidden with scratchpad selected",
+      "scratchpad retains its editor inset without important overrides",
+      "Daily note and Scratchpad retain identical heading and editor geometry",
+      "pdf tracks its compact content state",
+      "canvas tracks its compact content state",
+      "audio tracks its compact content state",
+      "web tracks its compact content state",
+      "Resize keeps its floating controls visible",
+      "Closing Resize clears the expanded-control state",
+      "Base list markers gain their local bullet gutter",
+      "Base list markers update when the marker type changes",
+      "Removing a Base list marker clears its gutter state",
+      "Settings expose searchable definitions",
+      "Native settings render all three inputs",
+      "Declarative preference changes persist through the existing save queue"
+    ],
+    "editorGeometry": [
+      [
+        0,
+        24,
+        34,
+        234
+      ],
+      [
+        0,
+        24,
+        34,
+        234
+      ],
+      [
+        0,
+        24,
+        34,
+        234
+      ],
+      [
+        0,
+        24,
+        34,
+        234
+      ]
+    ]
+  },
+  "interaction": {
+    "passed": 10,
+    "checks": [
+      "Keyboard Move handler with ArrowDown",
+      "Undo keyboard move",
+      "Mouse drag from visible heading commits placement",
+      "Undo heading drag",
+      "Add-to-desk dialog opens",
+      "Escape closes Add-to-desk dialog",
+      "No overlap or horizontal overflow at 1400px (4 columns)",
+      "No overlap or horizontal overflow at 900px (2 columns)",
+      "No overlap or horizontal overflow at 500px (1 columns)",
+      "Dark appearance captured"
+    ]
+  },
+  "limits": [
+    "Not tested on Windows or Linux",
+    "Pop-out windows and screen readers not exercised",
+    "Attestations require the tagged GitHub Actions release run; not created by local verification",
+    "Vault enumeration remains a documented feature requirement"
+  ]
+}

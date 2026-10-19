@@ -49,7 +49,7 @@ export class CoverLayout extends Component {
       const style = win.getComputedStyle(cover), text = win.getComputedStyle(preview);
       const lineHeight = parseFloat(text.lineHeight) || 18;
       const siblings = Array.from(cover.children).filter((el): el is HTMLElement => {
-        if (!(el instanceof win.HTMLElement) || el === preview || el.hidden) return false;
+        if (!(el.instanceOf(win.HTMLElement)) || el === preview || el.hidden) return false;
         const siblingStyle = win.getComputedStyle(el);
         return siblingStyle.display !== 'none' && siblingStyle.position !== 'absolute';
       });

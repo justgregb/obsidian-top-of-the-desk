@@ -1,3 +1,4 @@
+import { isRecord, isUnknownArray } from './validation';
 import { TFolder, type App } from 'obsidian';
 import { fileSourceType } from './source-types';
 import { renamePath, safePath } from './model';
@@ -28,12 +29,13 @@ export class RecentHistory {
   entries: OpenedItem[] = [];
   private day = dayKey(new Date());
   constructor(private app: App) {
-    const stored = app.loadLocalStorage(STORAGE);
-    const input = Array.isArray(stored) ? stored : app.workspace.getLastOpenFiles();
+    const stored: unknown = app.loadLocalStorage(STORAGE);
+    const input = isUnknownArray(stored) ? stored : app.workspace.getLastOpenFiles();
     const seen = new Set<string>();
-    for (const value of input) {
+    for (const raw of input) {
+      const value = isRecord(raw) ? raw : {};
       const kind = value?.kind === 'folder' ? 'folder' : 'file';
-      const rawPath = typeof value === 'string' ? value : value?.path;
+      const rawPath = typeof raw === 'string' ? raw : value.path;
       const path = kind === 'folder' && rawPath === '/' ? '/' : safePath(rawPath);
       if (!path || seen.has(path) || kind === 'file' && !fileSourceType(path.split('.').pop() || '')) continue;
       seen.add(path);

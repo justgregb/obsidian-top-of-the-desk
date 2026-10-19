@@ -33,8 +33,8 @@ export class UndoNotice {
   show(message: string, restore: () => void, origin?: UndoOrigin): void {
     this.clear();
     const doc = origin?.doc ?? document, win = doc.defaultView!;
-    const fragment = doc.createDocumentFragment();
-    const row = doc.createElement('div');
+    const fragment = doc.adoptNode(createFragment());
+    const row = doc.adoptNode(createFragment()).createDiv();
     row.className = 'tod-undo-notice'; fragment.appendChild(row);
     row.createSpan({ text: message, attr: { role: 'status', 'aria-live': 'polite' } });
     const button = row.createEl('button', { text: 'Undo', attr: { type: 'button', 'aria-label': `Undo: ${message}` } });

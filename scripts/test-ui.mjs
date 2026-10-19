@@ -12,6 +12,7 @@ const checks=[];
 const before=evaluate('return {settings:p.settings,sidebar:app.workspace.leftSplit.collapsed,theme:app.getTheme()};');
 await mkdir('dist/verification',{recursive:true});
 try {
+  cdp('Emulation.setFocusEmulationEnabled',{enabled:true});
   evaluate('for(const dialog of [...p.widgetDialogs])dialog.close();app.workspace.leftSplit.collapse();return true;');
   cdp('Emulation.setDeviceMetricsOverride',{width:1400,height:1000,deviceScaleFactor:1,mobile:false});settle();
   const original=evaluate('return view.widgetGrid.layout.get("item-morning");');

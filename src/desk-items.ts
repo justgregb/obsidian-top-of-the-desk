@@ -4,14 +4,14 @@ import { COPY, openSourceLabel, formatCount } from './copy';
 import { Component, Notice, TFile, TFolder, parseLinktext, setIcon, setTooltip } from 'obsidian';
 import { deskSourcesForDrag, type NativeDraggable } from './native-source-drag';
 import type DeskPlugin from './main';
-import { itemWidgetId, widgetStackFor, widgetStackOwners, isCoverWidget, isVisibleWidget, DeskFolder, DeskItem, DeskStack, collectionCountVisibility, deskPaths, itemPaths } from './model';
+import { itemWidgetId, widgetStackFor, widgetStackOwners, isCoverWidget, isVisibleWidget, DeskFolder, DeskStack, collectionCountVisibility, itemPaths } from './model';
 import { StackPopover } from './stack-popover';
 import { PointerDrag } from './pointer-drag';
 import { CoverLayout } from './cover-layout';
 import { FolderPopover } from './folder-popover';
 import { NotePopover } from './note-popover';
 import { compareNames, updateBounds, updateText, updateTooltip } from './ui';
-import { createCardMetadata } from './card-metadata';
+import { createCardMetadata, syncCardMetadata } from './card-metadata';
 import { UndoOrigin, undoOrigin } from './undo-notice';
 import { DESK_ACTION_ICONS, setCollectionIcon } from './collection-icons';
 
@@ -562,10 +562,12 @@ export class DeskItemsView extends Component {
   }
 
   private resumeButton(footer: HTMLElement, visible: boolean, collection: boolean): void {
+    footer.toggleClass('has-resume', visible && !!this.lastWorkedPath);
     let button = footer.querySelector<HTMLButtonElement>(':scope > .tod-resume-note');
     if (!visible || !this.lastWorkedPath) {
       if (button && !button.hidden && button === button.ownerDocument.activeElement) footer.closest('.tod-desk-item')?.querySelector<HTMLButtonElement>('.tod-card-title')?.focus({ preventScroll: true });
       if (button) button.hidden = true;
+      syncCardMetadata(footer);
       return;
     }
     if (!button) {
@@ -581,7 +583,8 @@ export class DeskItemsView extends Component {
       };
     }
     const path = this.lastWorkedPath;
-    button.hidden = false; button.dataset.resumePath = path; button.dataset.focusKey = `resume:${path}`;
+    button.hidden = false;
+    syncCardMetadata(footer); button.dataset.resumePath = path; button.dataset.focusKey = `resume:${path}`;
     const detail = button.querySelector<HTMLElement>('.tod-resume-detail');
     if (detail) updateText(detail, this.noteName(path));
     button.setAttribute('aria-label', COPY.resume);
@@ -593,6 +596,7 @@ export class DeskItemsView extends Component {
   }
 
   private workedMarker(parent: HTMLElement, visible: boolean, showLabel: boolean): void {
+    parent.toggleClass('has-last-worked', visible && !!this.lastWorkedPath);
     let marker = parent.querySelector<HTMLElement>(':scope > .tod-last-worked-marker');
     if (!visible || !this.lastWorkedPath) { marker?.remove(); return; }
     if (!marker) {
@@ -696,7 +700,7 @@ export class DeskItemsView extends Component {
     const current = () => !this.stopped && stats.isConnected;
     const total = async () => {
       if (!files || files.some(file => !file)) throw new Error('Collection note unavailable');
-      return this.plugin.collectionWordCount(item.id, files as TFile[], current);
+      return this.plugin.collectionWordCount(item.id, files.filter((file): file is TFile => file instanceof TFile), current);
     };
     this.whenVisible(root, () => { void total().then(count => {
       if (!current()) return;
@@ -718,7 +722,7 @@ export class DeskItemsView extends Component {
   }
 
   private popupNote(parent: HTMLElement, path: string): HTMLElement {
-    const row = parent.createEl('div', { cls: 'tod-folder-row tod-stack-note-row', attr: { 'data-note-path': path } });
+    const row = parent.createDiv({ cls: 'tod-folder-row tod-stack-note-row', attr: { 'data-note-path': path } });
     const grip = this.noteGrip(row, path, row);
     grip.addClass('tod-browser-grip'); grip.empty();
     setIcon(grip.createSpan({ cls: 'tod-browser-file-symbol', attr: { 'aria-hidden': 'true' } }), 'file-text');

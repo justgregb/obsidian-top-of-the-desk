@@ -1,3 +1,4 @@
+import { stripControls } from './validation';
 import { ConfigurableSourceType, matchesSourceFile, SOURCE_TYPES, sourceWebUrl } from './source-types';
 import { COPY } from './copy';
 import { AbstractInputSuggest, Modal, Notice, TFile, TFolder, prepareFuzzySearch } from 'obsidian';
@@ -134,7 +135,7 @@ export class SourceWidgetModal extends Modal {
     if (!this.id) this.sourceInput.focus();
   }
   private normalizedTitle(value: string): string {
-    const title = value.replace(/[\x00-\x1f]/g, '').trim().slice(0, 100);
+    const title = stripControls(value).trim().slice(0, 100);
     return title === widgetName({ ...this.draft, title: '' }) ? '' : title;
   }
   private hasValidSource(): boolean {

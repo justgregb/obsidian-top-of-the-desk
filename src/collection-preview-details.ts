@@ -85,7 +85,7 @@ export class CollectionPreviewDetails extends Component {
         if (!link || !title) continue;
         let identity = link.querySelector<HTMLElement>('.tod-list-identity');
         if (!identity) {
-          identity = link.ownerDocument.createElement('span'); identity.className = 'tod-list-identity';
+          identity = link.ownerDocument.adoptNode(createFragment()).createSpan(); identity.className = 'tod-list-identity';
           title.replaceWith(identity); identity.append(title);
         }
         const heading = identity.createSpan('tod-browser-heading');
@@ -129,6 +129,7 @@ export class CollectionPreviewDetails extends Component {
         if (!current()) return;
         const text = preview.status === 'fulfilled' ? preview.value.trim() : '';
         updateText(details.excerpt, text); details.excerpt.hidden = !text;
+        details.context.toggleClass('has-excerpt', !!text);
         details.context.hidden = !text && !details.context.querySelector('.tod-source-path');
         details.count = words.status === 'fulfilled' ? words.value : undefined;
         details.words.hidden = details.count === undefined;

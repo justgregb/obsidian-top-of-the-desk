@@ -1,3 +1,4 @@
+import { isRecord } from './validation';
 import { App, editorInfoField } from 'obsidian';
 import { Transaction, type Text, type Extension } from '@codemirror/state';
 import { ViewPlugin, type ViewUpdate } from '@codemirror/view';
@@ -5,7 +6,7 @@ import { noteWordCount } from './word-count';
 
 const STORAGE = 'top-of-the-desk:writing-activity';
 interface ActivityData { version: 1; startedOn: string; days: Record<string, number>; }
-interface PendingWriting { before: Text; after: Text; day: string; timer: ReturnType<typeof setTimeout>; }
+interface PendingWriting { before: Text; after: Text; day: string; timer: number; }
 
 export function localDay(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -20,7 +21,7 @@ function validDay(day: unknown): day is string {
 
 /** Local, signed daily changes. No note text, paths, or estimated past activity is stored. */
 export class WritingActivity {
-  private data: ActivityData = { version: 1, startedOn: '', days: Object.create(null) };
+  private data: ActivityData = { version: 1, startedOn: '', days: {} };
   private pending = new Map<object, PendingWriting>();
   private listeners = new Set<() => void>();
   private counts = new WeakMap<Text, number>();
@@ -30,12 +31,12 @@ export class WritingActivity {
 
   constructor(private app: App) {
     try {
-      const raw = app.loadLocalStorage(STORAGE) as Partial<ActivityData> | null;
+      const raw: unknown = app.loadLocalStorage(STORAGE);
       if (raw == null) return;
-      if (raw.version !== 1 || !validDay(raw.startedOn) || !raw.days || typeof raw.days !== 'object' || Array.isArray(raw.days)) throw new Error('Unrecognized activity history');
-      const days: Record<string, number> = Object.create(null);
+      if (!isRecord(raw) || raw.version !== 1 || typeof raw.startedOn !== 'string' || !validDay(raw.startedOn) || !isRecord(raw.days)) throw new Error('Unrecognized activity history');
+      const days: Record<string, number> = {};
       for (const [day, count] of Object.entries(raw.days)) {
-        if (!validDay(day) || !Number.isSafeInteger(count)) throw new Error('Invalid activity history');
+        if (!validDay(day) || typeof count !== 'number' || !Number.isSafeInteger(count)) throw new Error('Invalid activity history');
         days[day] = count;
       }
       this.data = { version: 1, startedOn: raw.startedOn, days };
@@ -64,13 +65,13 @@ export class WritingActivity {
     if (prior && (prior.day !== day || prior.after !== before)) this.flush(owner);
     const current = this.pending.get(owner);
     if (current) { current.after = after; return; }
-    this.pending.set(owner, { before, after, day, timer: setTimeout(() => this.flush(owner), 800) });
+    this.pending.set(owner, { before, after, day, timer: window.setTimeout(() => this.flush(owner), 800) });
   }
 
   flush(owner: object): void {
     const pending = this.pending.get(owner);
     if (!pending) return;
-    clearTimeout(pending.timer); this.pending.delete(owner);
+    window.clearTimeout(pending.timer); this.pending.delete(owner);
     const count = (doc: Text) => {
       let value = this.counts.get(doc);
       if (value === undefined) { value = noteWordCount(doc.toString()); this.counts.set(doc, value); }
@@ -93,13 +94,15 @@ export class WritingActivity {
   }
 
   editorExtension(onLocalEdit?: (path: string) => void): Extension {
-    const activity = this;
+    const tracking = () => this.tracking;
+    const capture = (owner: object, before: Text, after: Text) => this.capture(owner, before, after);
+    const flush = (owner: object) => this.flush(owner);
     return ViewPlugin.fromClass(class {
       update(update: ViewUpdate): void {
         if (!update.docChanged) return;
         const file = update.state.field(editorInfoField, false)?.file;
         // Desk editors report their guarded local changes directly, exactly once.
-        if ((!activity.tracking && !onLocalEdit) || file?.extension !== 'md' || update.view.dom.closest('.tod-note-editor')) return;
+        if ((!tracking() && !onLocalEdit) || file?.extension !== 'md' || update.view.dom.closest('.tod-note-editor')) return;
         let localChange = false;
         for (const transaction of update.transactions) {
           if (!transaction.docChanged) continue;
@@ -109,12 +112,12 @@ export class WritingActivity {
           const editorCommand = !userEvent && transaction.scrollIntoView && transaction.annotation(Transaction.addToHistory) !== false;
           if (!transaction.annotation(Transaction.remote) && (directEdit || editorCommand)) {
             localChange = true;
-            if (activity.tracking) activity.capture(this, transaction.startState.doc, transaction.newDoc);
-          } else activity.flush(this);
+            if (tracking()) capture(this, transaction.startState.doc, transaction.newDoc);
+          } else flush(this);
         }
         if (localChange) onLocalEdit?.(file.path);
       }
-      destroy(): void { activity.flush(this); }
+      destroy(): void { flush(this); }
     });
   }
 }
