@@ -12,6 +12,8 @@ if (versions[manifest.version] !== manifest.minAppVersion) throw new Error('vers
 const main = await readFile(join(repo,'main.js'));
 if (!main.toString('utf8').startsWith(`/* Top of the Desk — ${manifest.version} */`)) throw new Error('Bundle version does not match. Run npm run bundle.');
 if(manifest.description.length > 250 || !manifest.description.endsWith('.')) throw new Error('Description must be at most 250 characters and end with a period.');
+if (manifest.description.trim().toLowerCase().startsWith(manifest.name.trim().toLowerCase())) throw new Error('Description must not start with the plugin name.');
+if (pkg.description !== manifest.description) throw new Error('Package and manifest descriptions must match.');
 const dest = join(repo,'dist',manifest.version); await mkdir(dest,{recursive:true});
 // Remove the checksum file left by the older packager, if present.
 await rm(join(dest,'SHA256SUMS.txt'), { force: true });

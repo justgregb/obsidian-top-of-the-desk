@@ -1,4 +1,4 @@
-/* Top of the Desk — 0.9.52 */
+/* Top of the Desk — 0.9.53 */
 /*!
 # Embedded editor construction
 

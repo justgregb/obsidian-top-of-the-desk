@@ -1,8 +1,8 @@
 {
   "name": "top-of-the-desk",
-  "version": "0.9.52",
+  "version": "0.9.53",
   "private": true,
-  "description": "Top of the Desk keeps your current work within reach.",
+  "description": "Keep notes, files, websites, and writing tools together on a customizable desk.",
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs",
     "test": "node tests/run.mjs && node tests/release.mjs && node tests/review.mjs",
