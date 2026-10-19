@@ -32,7 +32,7 @@ body:has(.workspace-leaf.mod-active > .workspace-leaf-content[data-type="top-of-
 .tod-quick-action > span:first-child { display: flex; }
 .tod-quick-action svg { width: 14px; height: 14px; }
 /* Two compact tracks plus their gap retain the previous smallest card height. */
-.tod-widgets { --tod-card-title-height: var(--tod-content-control-size); --tod-cover-padding: 12px; --tod-stack-sheet-step: 4px; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: var(--tod-row-height); grid-auto-flow: row dense; gap: var(--tod-gap); align-items: stretch; min-height: var(--tod-row-height); }
+.tod-widgets { --tod-grid-columns: 4; --tod-card-title-height: var(--tod-content-control-size); --tod-cover-padding: 12px; --tod-stack-sheet-step: 4px; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: var(--tod-row-height); grid-auto-flow: row dense; gap: var(--tod-gap); align-items: stretch; min-height: var(--tod-row-height); }
 .tod-widget { position: relative; box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; padding: var(--tod-widget-padding); border: 1px solid var(--background-modifier-border); border-radius: var(--tod-card-radius); background: var(--background-primary); }
 /* One quiet pill groups the controls without changing the widget's footprint. */
 .tod-shell .tod-widget-controls { position: absolute; z-index: 7; inset-block-start: calc(-.5 * var(--tod-pill-height)); inset-inline-end: var(--tod-widget-padding); max-width: calc(100% - 2 * var(--tod-widget-padding)); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
@@ -281,14 +281,14 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-daily-create-icon { display: flex; flex: 0 0 auto; }
 .tod-daily-create-icon svg { width: 14px; height: 14px; }
 @container tod-home (max-width: 1050px) {
-  .tod-widgets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tod-widgets { --tod-grid-columns: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tod-widget[data-columns="3"], .tod-widget[data-columns="4"] { grid-column: span 2; }
 }
 @container tod-home (max-width: 600px) {
   .tod-shell { padding: 16px 14px 24px; }
   .tod-header { gap: 10px; }
   .tod-header h1 { font-size: 20px; line-height: 26px; }
-  .tod-widgets { grid-template-columns: minmax(0, 1fr); }
+  .tod-widgets { --tod-grid-columns: 1; grid-template-columns: minmax(0, 1fr); }
   .tod-widget[data-columns] { grid-column: 1; }
   .tod-shell { --tod-widget-padding: 12px; }
 }

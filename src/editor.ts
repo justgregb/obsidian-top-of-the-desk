@@ -159,7 +159,7 @@ export class WidgetMarkdownEditor extends Component {
 
   onunload(): void {
     if (this.app.workspace.activeEditor === this.owner) this.app.workspace.activeEditor = null;
-    this.owner.hoverPopover?.hide();
+    this.owner.hoverPopover?.unload();
     this.removeChild(this.native);
     this.native.destroy();
     this.el.remove();

@@ -1,26 +1,27 @@
-# Release verification — 0.9.50
+# Release verification — 0.9.51
 
-Prepared 2026-10-19 from the supplied 2026-10-16 handoff. Repository: `justgregb/obsidian-top-of-the-desk`. Tag: `0.9.50`, without a `v` prefix. Release status: prerelease. License: MIT, selected by Greg on 2026-10-19.
+Verified 2026-10-19 in a separate fictional demo vault on macOS with Obsidian 1.14.4 (installer 1.14.4). Repository: `justgregb/obsidian-top-of-the-desk`. Tag: `0.9.51`. Regular release, MIT license. The existing 0.9.50 prerelease and tag remain unchanged.
 
-## Completed
+## Passed
 
-- Verified all 148 original handoff file checksums before editing.
-- Compared the synced installation's manifest and runtime hashes with the handoff; all matched its recorded installed snapshot.
-- Applied Greg's full replacement description to the README, description document, and release notes. Used its opening sentence for compact manifest, package, and GitHub metadata.
-- Added the approved MIT License and package license metadata.
-- Included the existing third-party notice in the JavaScript bundle; executable content otherwise matches the supplied runtime exactly.
-- Installed locked dependencies and rebuilt with `npm run bundle`; packaged using `npm run package`.
-- Checked version metadata, bundle banner, three asset checksums, local documentation/image links, and all five supplied screenshots.
-- Reviewed the publication tree for personal files, local machine paths, and credential patterns. Only the standalone source repository and fictional demo fixtures are published.
+- 26 existing automated tests and 7 added regression tests.
+- Strict TypeScript checking, production bundling, version consistency, and release packaging.
+- 52 desktop integration assertions: eight source types and duplicate reuse; source preservation; remove/Undo; stacks; image sizing and movement; compact-source headings; note/folder renames; recent history; scratchpad and daily-note persistence/conflict recovery; embedded editor writes; writing totals; switching writing tools; audio mute/play/seek/pause; settings persistence.
+- Plugin reload preserves saved settings.
+- 10 interaction/layout checks: keyboard Move handler and Undo; actual mouse heading drag and Undo; Add dialog and Escape; no overlapping items or horizontal overflow at 1400, 900, and 500 CSS pixels; dark appearance capture. Screenshots visually reviewed.
+- Fixed a failure caught by the responsive test: implicit CSS tracks left behind by saved positions caused the grid to retain four columns after narrowing. A declared responsive column count now drives the layout calculation.
+- No captured runtime errors after the final integration run.
+- Larger-vault smoke check with 1,000 generated notes and 200 additional desk notes: catalog indexing 1 ms, add/save/render 181 ms, Add picker 90 ms on this Mac. These are single-run observations, not performance guarantees or a benchmark suite.
+- User-approved description and MIT license preserved; third-party notice included in the bundle. Fictional fixtures and original screenshot provenance retained. No personal vault files are included.
 
-## Verification limits
+## Scope and limitations
 
-Automated tests, TypeScript checking, broad runtime regression checks, mobile/touch checks, minimum-version checks, and performance benchmarks were not run for this prerelease. The handoff records prior screenshot capture on macOS with Obsidian 1.14.4; visual review does not establish every interaction's correctness.
+The manifest now requires desktop Obsidian 1.14.4+, matching the tested minimum. Mobile is excluded. Windows, Linux, other Obsidian versions, native Files-sidebar drag gestures, complete keyboard traversal, and screen readers were not exercised. Keyboard Move uses dispatched key events; pointer dragging uses DevTools mouse events. Narrow desktop widths do not establish mobile support. Network website loading and all possible themes/plugins are outside this pass.
 
-The manifest retains its existing declared Obsidian 1.11.0 minimum and mobile eligibility. These remain unverified and are disclosed in the README and release notes. Before a stable release, validate or revise those compatibility declarations and exercise persistence, Undo, source additions, duplicate reveal, dragging, stacks, editors, audio, history, and keyboard/touch behavior.
+The five public demo screenshots retain their accurately labelled 0.9.50 capture provenance. Additional 0.9.51 verification screenshots were reviewed locally. Tests run in an isolated vault and do not modify the personal installation.
 
-## Publication checks
+## Publication
 
-Publish from the exact reviewed commit. Upload `main.js`, `manifest.json`, and `styles.css` separately, plus the checksum file. Verify the remote tag, asset contents, README image paths, and public prerelease status after upload.
+Publish the exact reviewed source commit with tag `0.9.51`. Upload `main.js`, `manifest.json`, `styles.css`, and `SHA256SUMS.txt`. Verify GitHub asset digests, tag commit, and regular/latest release status. Community directory submission is separate and is not part of this release.
 
-GitHub publication is separate from Obsidian Community directory acceptance. No directory submission is part of this release. Consult the current official submission instructions before any future directory submission.
+Machine-readable results: [verification/0.9.51.json](verification/0.9.51.json).

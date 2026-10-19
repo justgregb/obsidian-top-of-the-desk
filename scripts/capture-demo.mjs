@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const repo=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -31,7 +31,7 @@ try {
   evaluate(`const p=app.plugins.plugins['top-of-the-desk'];for(const dialog of [...p.widgetDialogs])dialog.close();p.selectStackWidget('writing','scratchpad');`);
   await shot('05-scratchpad.png');
   evaluate(`app.plugins.plugins['top-of-the-desk'].selectStackWidget('writing','daily');`);
-  await writeFile(resolve(output,'capture-info.json'),JSON.stringify({pluginVersion:'0.9.50',obsidian:cli(['version']),capturedAt:new Date().toISOString(),viewport:{width:1600,height:850},theme:'Obsidian default, light and dark; teal accent',syntheticData:true,images:['01-desk-light.png','02-desk-dark.png','03-note-stack.png','04-add-to-desk.png','05-scratchpad.png']},null,2)+'\n');
+  await writeFile(resolve(output,'capture-info.json'),JSON.stringify({pluginVersion:JSON.parse(await readFile(resolve(repo,'manifest.json'),'utf8')).version,obsidian:cli(['version']),capturedAt:new Date().toISOString(),viewport:{width:1600,height:850},theme:'Obsidian default, light and dark; teal accent',syntheticData:true,images:['01-desk-light.png','02-desk-dark.png','03-note-stack.png','04-add-to-desk.png','05-scratchpad.png']},null,2)+'\n');
 } finally {
   evaluate(`const p=app.plugins.plugins['top-of-the-desk'];for(const dialog of [...p.widgetDialogs])dialog.close();${view}view.deskItems.popup.close(false);app.changeTheme(${JSON.stringify(original.theme)});${original.sidebar?'app.workspace.leftSplit.collapse()':'app.workspace.leftSplit.expand()'};`);
   cli(['dev:cdp','method=Emulation.clearDeviceMetricsOverride']);

@@ -1,14 +1,16 @@
 {
   "name": "top-of-the-desk",
-  "version": "0.9.50",
+  "version": "0.9.51",
   "private": true,
   "description": "Top of the Desk keeps your current work within reach.",
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs",
-    "test": "node tests/run.mjs",
+    "test": "node tests/run.mjs && node tests/release.mjs",
     "bundle": "node esbuild.config.mjs",
     "demo": "node scripts/prepare-demo.mjs",
-    "package": "node scripts/package-release.mjs"
+    "package": "node scripts/package-release.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:obsidian": "node scripts/test-obsidian.mjs"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",

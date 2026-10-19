@@ -5,10 +5,18 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "lib": ["DOM", "ES2020"],
-    "types": ["node"],
+    "esModuleInterop": false,
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2020"
+    ],
+    "types": [
+      "node"
+    ],
     "noEmit": true
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts"
+  ]
 }

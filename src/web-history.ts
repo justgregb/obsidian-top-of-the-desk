@@ -43,8 +43,8 @@ export class WebHistory extends Component {
     this.stopped = false;
     this.registerEvent((this.app.workspace as Events).on('webviewer:update-history', () => this.requestRefresh()));
     const core = this.core;
-    if (typeof core?.on === 'function') this.registerEvent(core.on('change', (plugin: { instance?: { id?: string } }) => {
-      if (plugin?.instance?.id === 'webviewer') this.requestRefresh();
+    if (typeof core?.on === 'function') this.registerEvent(core.on('change', () => {
+      this.requestRefresh();
     }));
     this.app.workspace.onLayoutReady(() => { if (!this.stopped) this.requestRefresh(0); });
   }

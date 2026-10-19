@@ -1,21 +1,28 @@
 # Development
 
-This snapshot is Top of the Desk 0.9.50, settings schema 10. It contains TypeScript source, the existing test harness and fixtures, locked development dependencies, build configuration, and the runtime bundle.
+Top of the Desk 0.9.51 uses settings schema 10. Runtime dependencies on Obsidian and CodeMirror remain external to the production bundle.
 
 ```sh
 npm ci
-npm run bundle
+npm test
+npm run typecheck
+npm run build
 npm run package
 ```
 
-`npm run bundle` uses esbuild only. `npm run build` runs TypeScript checking before bundling. `npm test` runs the existing suite. Automated tests/typechecking were intentionally not run in the recent development passes; keep this distinction when reporting verification. Screenshot capture is a visual smoke check, not a full regression run.
+`npm test` runs 26 existing tests and 7 release regression tests. `npm run build` typechecks before bundling; `npm run bundle` only bundles. `npm run package` checks coordinated versions, compatibility metadata, bundle banner, and description, then generates individual runtime assets and SHA-256 checksums.
 
-The runtime depends on Obsidian and its CodeMirror packages, which stay external to the bundle. Internal interfaces are used for embedded Markdown editors, Daily notes, new-tab handling, and Web viewer history. Future Obsidian changes may require maintenance.
+## Desktop checks
 
-The prebuilt bundle and this snapshot have matching source. Keep version fields in `manifest.json`, `package.json`, and both package-lock version entries aligned. The bundle banner in `esbuild.config.mjs` must match. If choosing a different release number, also update `versions.json`, documentation, and release commands before bundling. Do not relabel old screenshots as a new build without checking/recapturing them.
+Use a separate demo vault named `Top of the Desk Release QA`, created with `scripts/prepare-demo.mjs`. Open it in Obsidian with the CLI enabled. These scripts reject other vault names and require the demo marker.
 
-`npm run package` checks version metadata and the bundle banner, then prepares the three release assets and checksums in `dist/<version>/`. It does not publish, run tests, or modify a vault. `private: true` in package.json prevents accidental npm publication; it does not restrict GitHub publishing.
+```sh
+npm run test:obsidian -- "Top of the Desk Release QA"
+node scripts/test-ui.mjs "Top of the Desk Release QA"
+```
 
-## Local safety
+Integration checks exercise actual vault writes, draft recovery, source additions, layouts, audio, editor input, writing counts, and reload persistence. Interaction checks cover the Move key handler, actual DevTools mouse input, Undo, dialogs, and desktop responsive layouts. Reports and screenshots are saved under ignored `dist/verification/`.
 
-Keep the repository separate from the synced plugin installation. Never replace the real vault's `data.json` with demo preferences. Keep a backup of the installed runtime and current data before any future installation. A newer synced build should be compared with this snapshot before deciding what to release.
+The demo is disposable: checks create and trash synthetic files and alter demo-local history. Never run them on personal notes. The real synced plugin installation is separate and is not updated by these commands.
+
+Internal interfaces remain in the embedded editor, Daily notes, and Web viewer integrations. Future Obsidian changes may require maintenance. See [release verification](RELEASE-CHECKLIST.md).

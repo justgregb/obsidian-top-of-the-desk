@@ -1,4 +1,4 @@
-import { Component, type TFile } from 'obsidian';
+import { Component, TFile } from 'obsidian';
 import type DeskPlugin from './main';
 import { formatCount } from './copy';
 import { updateText, updateTooltip } from './ui';
@@ -54,7 +54,7 @@ export class CollectionPreviewDetails extends Component {
       }
       this.drain();
     };
-    this.registerEvent(plugin.app.vault.on('modify', changed));
+    this.registerEvent(plugin.app.vault.on('modify', file => { if (file instanceof TFile) changed(file); }));
     this.registerEvent(plugin.app.metadataCache.on('changed', changed));
     const win = list.ownerDocument.defaultView!;
     const resize = new win.ResizeObserver(() => {

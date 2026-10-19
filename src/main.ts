@@ -138,7 +138,8 @@ export default class DeskPlugin extends Plugin {
       else {
         const kind = file instanceof TFolder ? 'folder' : file instanceof TFile ? fileSourceType(file.extension) : null;
         if (!kind) return;
-        const source = { kind, path: file.path }, owner = sourceWidgetId(this.settings, source);
+        const source: DeskSource = { kind, path: file.path };
+        const owner = sourceWidgetId(this.settings, source);
         const root = owner && (widgetStackFor(this.settings, owner) || owner);
         const onDesk = !!root && !!this.settings.widgets[root]?.enabled;
         menu.addItem(item => item.setTitle(onDesk ? COPY.showOnDesk : COPY.addToDesk).setIcon(onDesk ? DESK_ACTION_ICONS.showOnDesk : 'plus').onClick(() => { this.addSourceToDesk(source); }));
@@ -186,6 +187,7 @@ export default class DeskPlugin extends Plugin {
       this.refreshSoon();
     }));
     this.registerEvent(this.app.vault.on('modify', file => {
+      if (!(file instanceof TFile)) return;
       this.previewCache.delete(file.path); this.wordCounts.invalidate(file);
       void this.daily.changed(file.path);
       if (file.path === this.settings.scratchPath) void this.scratch.refresh();

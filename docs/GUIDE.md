@@ -2,7 +2,7 @@
 
 A quiet Obsidian home for the files, websites, and writing tools you want within reach.
 
-Version **0.9.50** · The manifest declares Obsidian **1.11.0 or later**; minimum-version and mobile verification are pending. The supplied screenshots use macOS and Obsidian **1.14.4**.
+Version **0.9.51** · Requires desktop Obsidian **1.14.4 or later**. Verified on macOS with Obsidian **1.14.4**. Mobile is excluded; Windows and Linux were not exercised.
 
 ## Make it yours
 
@@ -61,4 +61,3 @@ Supported audio extensions: `mp3`, `wav`, `m4a`, `3gp`, `flac`, `ogg`, `oga`, `o
 Place `main.js`, `manifest.json`, and `styles.css` in `.obsidian/plugins/top-of-the-desk/`, then enable the plugin in Obsidian’s Community plugins settings. To update, replace those three files and reload the plugin. Keep your existing `data.json`.
 
 This version retains settings schema 10. Older desks migrate automatically, preserving source references and responsive positions. Keep a copy of the previous runtime files and `data.json` before updating; restoring both is necessary when rolling back a schema migration.
-

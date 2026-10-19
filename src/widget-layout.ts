@@ -245,7 +245,7 @@ export class WidgetGrid extends Component {
     if (!nativeScroll) this.scrollAt(x, y);
     this.showTarget(x, y); return true;
   }
-  dropSourceMove(x: number, y: number, origin: UndoOrigin): void {
+  dropSourceMove(x: number, y: number, origin?: UndoOrigin): void {
     if (this.moving?.sources && this.withinDesk(x, y)) this.placeAt(x, y, origin);
   }
   finishSourceMove(): void { if (this.moving?.sources) this.finishMove(); }
@@ -397,7 +397,9 @@ export class WidgetGrid extends Component {
   private measure(): Geometry | null {
     if (!this.grid.isConnected || !this.grid.clientWidth) return null;
     const win = this.grid.ownerDocument.defaultView!, style = win.getComputedStyle(this.grid);
-    const tracks = style.gridTemplateColumns.trim().split(/\s+/).length;
+    // Explicit placements can create implicit tracks after a breakpoint change.
+    // Read the declared column count so those stale tracks cannot lock the layout.
+    const tracks = Number(style.getPropertyValue('--tod-grid-columns')) || 4;
     const columns: GridColumns = tracks <= 1 ? 1 : tracks <= 2 ? 2 : 4;
     const columnGap = parseFloat(style.columnGap) || 0, rowGap = parseFloat(style.rowGap) || 0;
     const rowHeight = parseFloat(style.gridAutoRows), bounds = this.grid.getBoundingClientRect();

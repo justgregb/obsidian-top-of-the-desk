@@ -46,9 +46,9 @@ Top of the Desk does not fetch website previews or add an external service. Webs
 
 ## Install manually
 
-Download `main.js`, `manifest.json`, and `styles.css` from the [GitHub release](https://github.com/justgregb/obsidian-top-of-the-desk/releases/tag/0.9.50). Put the three files in `.obsidian/plugins/top-of-the-desk/` inside your vault, then enable **Top of the Desk** in Community plugins. To update, replace those three files and reload the plugin; keep your existing `data.json`.
+Download `main.js`, `manifest.json`, and `styles.css` from the [GitHub release](https://github.com/justgregb/obsidian-top-of-the-desk/releases/tag/0.9.51). Put the three files in `.obsidian/plugins/top-of-the-desk/` inside your vault, then enable **Top of the Desk** in Community plugins. To update, replace those three files and reload the plugin; keep your existing `data.json`.
 
-This prerelease is version **0.9.50**. Its manifest declares Obsidian **1.11.0+**. The included screenshots were captured on macOS with Obsidian **1.14.4**; minimum-version and mobile verification are still pending. It is not yet listed in the Community directory.
+Version **0.9.51** requires desktop Obsidian **1.14.4 or later**. Release checks were run on macOS with Obsidian 1.14.4; Windows and Linux have not been exercised. Mobile is excluded from this release. It is not yet listed in the Community directory.
 
 ## Development
 
@@ -57,7 +57,7 @@ npm ci
 npm run bundle
 ```
 
-`npm run build` also typechecks; `npm test` runs the existing test suite. Those checks have not been run for this prerelease. See [development notes](docs/DEVELOPMENT.md) and the [release checklist](docs/RELEASE-CHECKLIST.md) for verification details.
+`npm run build` also typechecks; `npm test` runs 33 automated tests. Both passed for this release, along with desktop integration and responsive-layout checks. See [development notes](docs/DEVELOPMENT.md) and the [release checklist](docs/RELEASE-CHECKLIST.md) for verification details.
 
 ## License
 
