@@ -1,3 +1,4 @@
+import { isRecord, isUnknownArray, singleLine } from './validation';
 import { sourceWebUrl as recentWebUrl } from './source-types';
 import { recentWindow } from './recent-history';
 import { Component, Events, Keymap, Notice, type App } from 'obsidian';
@@ -74,17 +75,17 @@ export class WebHistory extends Component {
       if (this.stopped || revision !== this.revision || viewer !== this.viewer()) return;
       const pages = new Map<string, OpenedWebPage>();
       const group = recentWindow();
-      if (Array.isArray(history)) for (const value of history) {
-        if (!value || typeof value !== 'object') continue;
+      if (isUnknownArray(history)) for (const value of history) {
+        if (!isRecord(value)) continue;
         const openedAt = value.accessTs;
         // Filter before the limit so invalid/future entries cannot crowd out recent pages.
         // Old history also needs no URL parsing or title normalization.
-        if (!group(openedAt)) continue;
+        if (typeof openedAt !== 'number' || !group(openedAt)) continue;
         const url = recentWebUrl(value.url);
         if (!url) continue;
         const previous = pages.get(url);
         if (previous && previous.openedAt >= openedAt) continue;
-        const title = typeof value.title === 'string' ? value.title.replace(/[\u0000-\u001f\u007f\s]+/g, ' ').trim().slice(0, 500) : '';
+        const title = typeof value.title === 'string' ? singleLine(value.title, true).slice(0, 500) : '';
         pages.set(url, { kind: 'web', url, title: recentWebUrl(title) === url ? '' : title, openedAt });
       }
       this.replace([...pages.values()].sort((a, b) => b.openedAt - a.openedAt).slice(0, 100));

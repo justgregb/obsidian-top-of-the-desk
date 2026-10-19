@@ -1,0 +1,52 @@
+name: Prepare release
+on:
+  push:
+    tags: ['*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Validate release tag
+        id: version
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const { version } = JSON.parse(readFileSync('manifest.json', 'utf8'));
+          if (!/^\d+\.\d+\.\d+$/.test(version) || process.env.GITHUB_REF_NAME !== version) {
+            throw new Error('Tag must equal the manifest version, without a v prefix.');
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `value=${version}\n`);
+          JS
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Check committed bundle
+        run: git diff --exit-code -- main.js
+      - run: npm run package
+      - name: Attest the exact release assets
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: 'dist/${{ steps.version.outputs.value }}/*'
+      - name: Create a draft for final review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          gh release create "$VERSION" --verify-tag --draft \
+            --title "Top of the Desk $VERSION" --notes-file docs/RELEASE-NOTES.md \
+            "dist/$VERSION/main.js" "dist/$VERSION/manifest.json" "dist/$VERSION/styles.css"

@@ -8,7 +8,10 @@ const run = args => {
   return r.stdout.trim();
 };
 const code=await readFile(new URL('../tests/obsidian-integration.js',import.meta.url),'utf8');
-const output=run(['eval',`code=${code}`]);
+let output;
+run(['dev:cdp','method=Emulation.setFocusEmulationEnabled','params={"enabled":true}']);
+try { output=run(['eval',`code=${code}`]); }
+finally { run(['dev:cdp','method=Emulation.setFocusEmulationEnabled','params={"enabled":false}']); }
 const result=JSON.parse(output.replace(/^=>\s*/,''));
 await mkdir('dist/verification',{recursive:true});
 await writeFile('dist/verification/obsidian-integration.json',JSON.stringify(result,null,2)+'\n');

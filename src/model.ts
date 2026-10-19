@@ -1,3 +1,4 @@
+import { isRecord, isUnknownArray, hasControlCharacters, stripControls, singleLine } from './validation';
 import { SOURCE_TYPES, isCompactSourceType, isFileWidgetType, matchesSourceFile, sourceWebName, sourceWebUrl } from './source-types';
 import { COMPACT_HEIGHT, HALF_HEIGHT, STANDARD_HEIGHT, migrateWidgetRows, normalizeWidgetRows } from './widget-sizing';
 
@@ -61,15 +62,15 @@ export function deskPaths(items: DeskItem[]): string[] { return items.flatMap(it
 
 /** References only. A file is represented once on the desk, including inside stacks. */
 export function normalizeDeskItems(raw: unknown): DeskItem[] {
-  if (!Array.isArray(raw)) return [];
+  if (!isUnknownArray(raw)) return [];
   const seen = new Set<string>(), folders = new Set<string>(), ids = new Set<string>();
   const items: DeskItem[] = [];
   for (const [index, value] of raw.entries()) {
-    if (!value || typeof value !== 'object' || !['note', 'stack', 'folder'].includes(value.type)) continue;
-    if (value.type === 'stack' && !Array.isArray(value.paths)) continue;
+    if (!isRecord(value) || typeof value.type !== 'string' || !['note', 'stack', 'folder'].includes(value.type)) continue;
+    if (value.type === 'stack' && !isUnknownArray(value.paths)) continue;
     const folderPath = value.type === 'folder' ? value.path === '/' ? '/' : safePath(value.path) : null;
     if (value.type === 'folder' && (!folderPath || folders.has(folderPath) || folders.size >= 100)) continue;
-    const source = value.type === 'note' ? [value.path] : value.type === 'stack' && Array.isArray(value.paths) ? value.paths : [];
+    const source = value.type === 'note' ? [value.path] : value.type === 'stack' && isUnknownArray(value.paths) ? value.paths : [];
     const paths: string[] = [];
     for (const candidate of source) {
       const path = safePath(candidate, 'md');
@@ -83,7 +84,7 @@ export function normalizeDeskItems(raw: unknown): DeskItem[] {
     const baseId = id;
     while (ids.has(id)) id = `desk-${index}-${++suffix}-${baseId.slice(0, 40)}`;
     ids.add(id);
-    const description = typeof value.description === 'string' ? value.description.replace(/[\x00-\x1f\s]+/g, ' ').trim().slice(0, 240) : '';
+    const description = typeof value.description === 'string' ? singleLine(value.description).slice(0, 240) : '';
     const counts: CollectionCountSettings = {};
     if (typeof value.showNoteCount === 'boolean') counts.showNoteCount = value.showNoteCount;
     if (typeof value.showWordCount === 'boolean') counts.showWordCount = value.showWordCount;
@@ -91,7 +92,7 @@ export function normalizeDeskItems(raw: unknown): DeskItem[] {
       folders.add(folderPath); items.push({ id, type: 'folder', path: folderPath, ...(description ? { description } : {}), ...counts }); continue;
     }
     items.push(paths.length === 1 ? { id, type: 'note', path: paths[0] } : {
-      id, type: 'stack', name: typeof value.name === 'string' ? value.name.replace(/[\x00-\x1f]/g, '').trim().slice(0, 80) : '', paths, ...(description ? { description } : {}), ...counts
+      id, type: 'stack', name: typeof value.name === 'string' ? stripControls(value.name).trim().slice(0, 80) : '', paths, ...(description ? { description } : {}), ...counts
     });
   }
   return items;
@@ -99,7 +100,7 @@ export function normalizeDeskItems(raw: unknown): DeskItem[] {
 
 /** Saved collections may share references, but retain distinct identities. */
 function normalizePutAwayItems(raw: unknown): DeskItem[] {
-  if (!Array.isArray(raw)) return [];
+  if (!isUnknownArray(raw)) return [];
   const ids = new Set<string>();
   return raw.flatMap((value, index) => normalizeDeskItems([value]).map(item => {
     let id = item.id, suffix = 0;
@@ -127,7 +128,7 @@ export interface DeskSettings {
 }
 
 export function safePath(value: unknown, extension?: string): string | null {
-  if (typeof value !== 'string' || !value.trim() || /[\x00-\x1f]/.test(value)) return null;
+  if (typeof value !== 'string' || !value.trim() || hasControlCharacters(value)) return null;
   const path = value.trim().replace(/\\/g, '/');
   const parts = path.split('/');
   if (parts.some(p => !p || p === '.' || p === '..' || p.startsWith('.')) || /^[A-Za-z]:/.test(path)) return null;
@@ -136,7 +137,7 @@ export function safePath(value: unknown, extension?: string): string | null {
 }
 
 function normalizeGridPositions(raw: unknown): Partial<Record<GridColumns, GridPosition>> | undefined {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  if (!raw || typeof raw !== 'object' || isUnknownArray(raw)) return undefined;
   const positions: Partial<Record<GridColumns, GridPosition>> = {};
   for (const count of [1, 2, 4] as const) {
     const position = (raw as Record<string, unknown>)[count] as Partial<GridPosition> | undefined;
@@ -149,11 +150,10 @@ function normalizeGridPositions(raw: unknown): Partial<Record<GridColumns, GridP
 }
 
 export function normalizeSettings(raw: unknown): DeskSettings {
-  const s = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
-  const pins = Array.isArray(s.pins) ? s.pins.map(p => safePath(p, 'md')).filter((p): p is string => !!p) : [];
-  const savedWidgets = s.widgets && typeof s.widgets === 'object' && !Array.isArray(s.widgets)
-    ? s.widgets as Record<string, unknown> : {};
-  const widgets: Record<string, WidgetSettings> = Object.create(null);
+  const s = isRecord(raw) ? raw : {};
+  const pins = isUnknownArray(s.pins) ? s.pins.map(p => safePath(p, 'md')).filter((p): p is string => !!p) : [];
+  const savedWidgets = isRecord(s.widgets) ? s.widgets : {};
+  const widgets = Object.create(null) as Record<string, WidgetSettings>;
   const fineTracks = s.version === 10;
   const sharedHeights = s.version === 8 || s.version === 9 || fineTracks;
   const unified = s.version === 6 || s.version === 7 || sharedHeights;
@@ -163,7 +163,7 @@ export function normalizeSettings(raw: unknown): DeskSettings {
     : Object.entries(savedWidgets);
   for (const [id, raw] of entries) {
     if (!/^[a-zA-Z0-9_-]{1,100}$/.test(id) || ['__proto__', 'constructor', 'prototype'].includes(id)) continue;
-    const value = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+    const value = isRecord(raw) ? raw : {};
     const key = (legacy ? id : value.type) as WidgetKey;
     if (!WIDGET_KEYS.includes(key)) continue;
     // Singleton IDs remain stable so hidden editors and their drafts can be restored.
@@ -185,7 +185,7 @@ export function normalizeSettings(raw: unknown): DeskSettings {
     if (!unified) for (const map of [positions, resizeOrigins]) for (const position of Object.values(map || {})) position.row = (position.row - 1) * 3 + 1;
     widgets[id] = {
       type: key,
-      ...(key === 'widget-stack' ? { members: Array.isArray(value.members) ? value.members.filter((id): id is string => typeof id === 'string') : [], activeMember: typeof value.activeMember === 'string' ? value.activeMember : '' } : {}),
+      ...(key === 'widget-stack' ? { members: isUnknownArray(value.members) ? value.members.filter((id): id is string => typeof id === 'string') : [], activeMember: typeof value.activeMember === 'string' ? value.activeMember : '' } : {}),
       enabled: typeof value.enabled === 'boolean' ? value.enabled : key === 'base' ? s.baseEnabled === true : true,
       columns, rows,
       ...(positions ? { positions } : {}),
@@ -195,21 +195,21 @@ export function normalizeSettings(raw: unknown): DeskSettings {
       ...(coverSize ? { coverSize } : {}),
       ...(listSize ? { listSize } : {}),
       path: key === 'web' ? sourceWebUrl(path) || '' : key === 'note' ? safePath(path, 'md') || '' : isFileWidgetType(key) ? (typeof path === 'string' && matchesSourceFile(key, path.split('.').pop() || '') ? safePath(path) || '' : '') : key === 'folder' ? (path === '/' ? '/' : safePath(path) || '') : '',
-      view: key === 'base' && typeof view === 'string' ? view.replace(/[\x00-\x1f\]#|]/g, '').slice(0, 200) : '',
-      title: typeof title === 'string' && title !== 'Featured Base' ? title.replace(/[\x00-\x1f]/g, '').trim().slice(0, 100) : '',
+      view: key === 'base' && typeof view === 'string' ? stripControls(view).replace(/[\]#|]/g, '').slice(0, 200) : '',
+      title: typeof title === 'string' && title !== 'Featured Base' ? stripControls(title).trim().slice(0, 100) : '',
       ...(typeof value.showHeading === 'boolean' ? { showHeading: value.showHeading } : {}),
       ...(key === 'base' && typeof value.showBaseControls === 'boolean' ? { showBaseControls: value.showBaseControls } : {})
     };
   }
   for (const type of SINGLETON_WIDGETS) if (!widgets[type]) widgets[type] = { ...widgetDefaults(type), ...(!sharedHeights ? { rows: legacyWidgetRows(type) } : {}), enabled: false };
-  const order = Array.isArray(s.widgetOrder) ? s.widgetOrder.filter((id): id is string => typeof id === 'string' && !!widgets[id]) : [];
+  const order = isUnknownArray(s.widgetOrder) ? s.widgetOrder.filter((id): id is string => typeof id === 'string' && !!widgets[id]) : [];
   const settings: DeskSettings = {
     version: 10,
-    items: normalizeDeskItems(Array.isArray(s.items) ? s.items : pins.map((path, index) => ({ id: `note-${index}`, type: 'note', path }))),
+    items: normalizeDeskItems(isUnknownArray(s.items) ? s.items : pins.map((path, index) => ({ id: `note-${index}`, type: 'note', path }))),
     putAwayItems: normalizePutAwayItems(s.putAwayItems),
     openOnStartup: typeof s.openOnStartup === 'boolean' ? s.openOnStartup : false,
     openOnNewTab: typeof s.openOnNewTab === 'boolean' ? s.openOnNewTab : true,
-    pageTitle: typeof s.pageTitle === 'string' ? s.pageTitle.replace(/[\x00-\x1f]/g, '').trim().slice(0, 100) : s.showHeading === false ? '' : 'Top of the Desk',
+    pageTitle: typeof s.pageTitle === 'string' ? stripControls(s.pageTitle).trim().slice(0, 100) : s.showHeading === false ? '' : 'Top of the Desk',
     scratchPath: safePath(s.scratchPath, 'md') || 'Desk scratchpad.md',
     widgets,
     widgetOrder: [...new Set([...order, ...Object.keys(widgets)])]
@@ -381,7 +381,7 @@ function migrateDesk(settings: DeskSettings): void {
     }
     const surfaceId = itemWidgetId(item.id);
     const prior = settings.widgets[surfaceId];
-    const keepCover = !widget.enabled && settings.items.some(active => active.id === item!.id);
+    const keepCover = !widget.enabled && settings.items.some(active => active.id === item.id);
     settings.widgets[surfaceId] = {
       ...widget, ...(keepCover ? prior : {}), itemId: item.id,
       title: prior?.title || widget.title, presentation: keepCover ? 'cover' : 'list',
@@ -463,7 +463,7 @@ export function excerpt(markdown: string, summary?: unknown): string {
     .replace(/\[\^[^\]\r\n]+\]|\^\[[^\]\r\n]*\]/g, '')
     .replace(/^#{1,6}\s+.*$/gm, '')
     .replace(/!\[\[[^\]]*\]\]|!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, alias) => alias || target)
+    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match: string, target: string, alias: string | undefined) => alias || target)
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/^\s*(?:>\s*|[-*+]\s+(?:\[[ xX]\]\s*)?|\d+\.\s+)/gm, '')
     .replace(/<[^>]*>/g, '')

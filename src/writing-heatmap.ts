@@ -131,7 +131,7 @@ export class WritingHeatmap extends Component {
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     if (this.measurementFont !== font) {
       this.measurementFont = font;
-      const context = this.body.ownerDocument.createElement('canvas').getContext('2d');
+      const context = this.body.ownerDocument.adoptNode(createFragment()).createEl('canvas').getContext('2d');
       if (context) {
         context.font = font;
         const measure = (labels: string[]) => Math.ceil(Math.max(...labels.map(label => context.measureText(label).width)));

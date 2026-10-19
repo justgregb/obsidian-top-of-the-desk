@@ -56,7 +56,7 @@ export class StackPopover extends Component {
     this.details = this.addChild(new CollectionPreviewDetails(this.plugin, this.list, () => this.position()));
     this.dispose = watchPopover(el, () => this.anchor, {
       close: restore => this.close(restore), position: () => this.position(),
-      dragging: this.hooks.dragging,
+      dragging: () => this.hooks.dragging(),
       interacting: () => !!this.menu,
       escape: () => { this.hooks.finishDrag(); this.close(true); }
     });
@@ -132,7 +132,7 @@ export class StackPopover extends Component {
       const row = this.hooks.row(list, path);
       if (duplicate) {
         const title = row.querySelector<HTMLElement>('.tod-recent-title');
-        if (title) { const identity = title.ownerDocument.createElement('span'); identity.className = 'tod-list-identity'; title.replaceWith(identity); identity.append(title);
+        if (title) { const identity = title.ownerDocument.adoptNode(createFragment()).createSpan(); identity.className = 'tod-list-identity'; title.replaceWith(identity); identity.append(title);
           identity.createSpan({ cls: 'tod-source-path', text: path.split('/').slice(0, -1).join('/') || 'Vault' }); }
       }
       row.addClass('tod-stack-popup-note'); row.setAttribute('role', 'listitem');

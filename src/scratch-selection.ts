@@ -15,7 +15,7 @@ export class ScratchSelectionModal extends Modal {
     const form = this.contentEl.createEl('form', { cls: 'tod-widget-form' });
     const field = form.createEl('label', { cls: 'tod-widget-field', text: 'Note name' });
     const name = field.createEl('input', { attr: { type: 'text', maxlength: '160', required: 'true', placeholder: 'New note' } });
-    const suggestion = this.text.split('\n').find(line => line.trim())?.replace(/^\s*#+\s*/, '').replace(/[\\/:*?"<>|#\[\]]/g, '').trim().slice(0, 70);
+    const suggestion = this.text.split('\n').find(line => line.trim())?.replace(/^\s*#+\s*/, '').replace(/[\\/:*?"<>|#[\]]/g, '').trim().slice(0, 70);
     name.value = suggestion || 'New note';
     const parent = this.sourcePath.split('/').slice(0, -1).join('/');
     form.createEl('p', { cls: 'tod-form-help', text: `Saved in ${parent || 'the vault root'}. Your selection stays in Scratchpad.` });
@@ -30,7 +30,7 @@ export class ScratchSelectionModal extends Modal {
       event.preventDefault(); if (submit.disabled) return;
       const title = name.value.trim().replace(/\.md$/i, '');
       const fail = (message: string) => { error.setText(message); error.hidden = false; };
-      if (!title || /[\\/:*?"<>|#\[\]]/.test(title) || !safePath(title + '.md', 'md')) { fail('Use a note name without slashes or reserved filename characters.'); name.focus(); return; }
+      if (!title || /[\\/:*?"<>|#[\]]/.test(title) || !safePath(title + '.md', 'md')) { fail('Use a note name without slashes or reserved filename characters.'); name.focus(); return; }
       submit.disabled = true; error.hidden = true;
       try {
         let index = 1, path = `${parent ? parent + '/' : ''}${title}.md`;

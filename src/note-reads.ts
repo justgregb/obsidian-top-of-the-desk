@@ -4,8 +4,8 @@ interface ReadJob {
   file: TFile;
   stamp: string;
   promise: Promise<string>;
-  resolve(text: string): void;
-  reject(error: unknown): void;
+  resolve: (text: string) => void;
+  reject: (error: unknown) => void;
 }
 
 /** Share in-flight note reads across previews and counts, with one global limit. */

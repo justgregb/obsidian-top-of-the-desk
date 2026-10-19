@@ -8,6 +8,7 @@ import { WidgetEmptyState } from './empty-state';
 import { setCollectionIcon } from './collection-icons';
 import { compareNames, navigateList, reconcileChildren } from './ui';
 import { CollectionPreviewDetails } from './collection-preview-details';
+import { trackBaseListMarkers } from './base-list-markers';
 
 /** Only Bases embed their native view; other source cards use SourceCardWidget. */
 export class BaseWidget extends Component {
@@ -37,6 +38,7 @@ export class BaseWidget extends Component {
     }
     const host = this.body.createDiv('tod-base-host markdown-rendered');
     const component = this.renderer = this.addChild(new Component());
+    trackBaseListMarkers(host, component);
     component.register(this.bindLinks(host, settings.path));
     const link = this.plugin.app.fileManager.generateMarkdownLink(file, '', settings.view ? '#' + settings.view : '');
     void MarkdownRenderer.render(this.plugin.app, '!' + link, host, '', component).catch(error => {

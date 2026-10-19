@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 
+// Obsidian runs these stores in a renderer window.
+globalThis.window = globalThis;
+
 const dir = await mkdtemp(join(tmpdir(), 'top-of-desk-release-tests-'));
 const require = createRequire(import.meta.url);
 let passed = 0;

@@ -127,10 +127,9 @@ export class AddDeskModal extends FuzzySuggestModal<Choice> {
     el.addClass('tod-add-result');
     let icon = 'files', title = '', detail = '';
     if (choice.kind === 'source') {
-      const folder = choice.file instanceof TFolder;
-      const type = folder ? 'folder' : fileSourceType((choice.file as TFile).extension)!;
+      const type = choice.file instanceof TFile ? fileSourceType(choice.file.extension)! : 'folder';
       icon = SOURCE_TYPES[type].icon;
-      title = folder ? choice.file.path === '/' ? 'Vault' : choice.file.name : (choice.file as TFile).basename;
+      title = choice.file instanceof TFile ? choice.file.basename : choice.file.path === '/' ? 'Vault' : choice.file.name;
       detail = `${SOURCE_TYPES[type].name} · ${choice.file.path}`;
     } else if (choice.kind === 'new-url') { title = choice.url ? COPY.addToDesk : COPY.addWebsite; detail = choice.url || 'Paste a web address.'; icon = SOURCE_TYPES.web.icon; }
     else if (choice.kind === 'web') { title = choice.title || choice.url; detail = choice.url; icon = SOURCE_TYPES.web.icon; }
@@ -215,9 +214,9 @@ export class StackNotesModal extends Modal {
     const updateCount = () => { count.setText(`${this.selected.size} selected`); submit.disabled = this.selected.size < (this.id ? 1 : 2); };
     const rows = new Map<string, { label: HTMLLabelElement; check: HTMLInputElement }>();
     const doc = list.ownerDocument;
-    const empty = doc.createElement('p'); empty.className = 'tod-form-help';
+    const empty = doc.adoptNode(createFragment()).createEl('p'); empty.className = 'tod-form-help';
     empty.textContent = `${COPY.noMatchingNotes} Notes already in a stack aren’t listed.`;
-    const more = doc.createElement('button'); more.type = 'button'; more.textContent = 'Show more';
+    const more = doc.adoptNode(createFragment()).createEl('button'); more.type = 'button'; more.textContent = 'Show more';
     const render = () => {
       const query = search.value.trim().toLocaleLowerCase();
       if (query !== lastQuery) {
@@ -230,7 +229,7 @@ export class StackNotesModal extends Modal {
       for (const { file } of visible) {
         let row = rows.get(file.path);
         if (!row) {
-          const label = doc.createElement('label'); label.className = 'tod-note-choice';
+          const label = doc.adoptNode(createFragment()).createEl('label'); label.className = 'tod-note-choice';
           const check = label.createEl('input', { attr: { type: 'checkbox' } });
           const text = label.createSpan('tod-choice-text'); text.createSpan({ text: file.basename }); text.createSpan({ cls: 'tod-source-path', text: file.parent?.path || 'Vault' });
           check.onchange = () => { if (check.checked) this.selected.add(file.path); else this.selected.delete(file.path); updateCount(); };

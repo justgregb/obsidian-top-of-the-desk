@@ -1,11 +1,11 @@
 /* The status bar describes the active note; keep it out of the desk view. */
-body:has(.workspace-leaf.mod-active > .workspace-leaf-content[data-type="top-of-the-desk-home"]) .status-bar { display: none; }
+body.tod-desk-active .status-bar { display: none; }
 
 .workspace-leaf-content[data-type="top-of-the-desk-home"] .view-content.tod-view {
   padding: 0; overflow: auto; scrollbar-gutter: stable; background: var(--background-primary); container-type: inline-size; container-name: tod-home;
 }
 .tod-shell { --tod-card-radius: var(--radius-l); --tod-control-size: 24px; --tod-content-control-size: 24px; --tod-identity-icon-size: 16px; --tod-list-gap: 8px; --tod-list-inset: 6px; --tod-cover-copy-gap: 8px; --tod-pill-height: calc(var(--tod-control-size) + 2px); --tod-pill-radius: 999px; --tod-pill-inset: 8px; --tod-pill-gap: 4px; --tod-pill-action-gap: 2px; --tod-control-inset: 3px; --tod-control-radius: 6px; --tod-meta-font-size: var(--font-ui-smaller); --tod-meta-line-height: 18px; --tod-meta-height: var(--tod-pill-height); --tod-meta-gap: 6px; --tod-meta-color: var(--text-muted); --tod-gap: 14px; --tod-widget-padding: 14px; --tod-widget-heading-height: 24px; --tod-title-line-height: 22px; --tod-row-height: 64px; max-width: 1440px; margin: 0 auto; padding: 22px 24px 30px; color: var(--text-normal); }
-.tod-shell [hidden] { display: none !important; }
+.tod-shell [hidden] { display: none; }
 .tod-shell button:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; box-shadow: none; }
 /* One capsule surface for text, metadata actions, toolbars and stack navigation.
    Include buttons explicitly so native/theme button rules cannot change their shape. */
@@ -86,8 +86,8 @@ body:has(.workspace-leaf.mod-active > .workspace-leaf-content[data-type="top-of-
 .tod-metadata-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tod-meta-gap); min-width: 0; }
 .tod-metadata-actions { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .tod-metadata-actions:empty { display: none; }
-.tod-card-footer:has(> .tod-metadata-actions:empty) { grid-template-columns: minmax(0, 1fr); }
-.tod-preview:empty, .tod-card-footer:not(:has(> .tod-metadata-group > :not([hidden]), > .tod-metadata-actions > :not([hidden]))) { display: none; }
+.tod-card-footer.has-no-actions { grid-template-columns: minmax(0, 1fr); }
+.tod-preview:empty, .tod-card-footer.is-empty { display: none; }
 .tod-metadata-icon { display: inline-flex; flex: 0 0 auto; }
 .tod-metadata-icon svg { width: 14px; height: 14px; }
 .tod-metadata-value, .tod-stack-count-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-normal); }
@@ -139,7 +139,7 @@ body:has(.workspace-leaf.mod-active > .workspace-leaf-content[data-type="top-of-
 .tod-section-heading.tod-drag-handle button.tod-widget-title { cursor: grab; }
 .tod-drag-handle.tod-touch-drag-handle { touch-action: none; }
 .tod-drag-handle svg { pointer-events: none; }
-body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !important; user-select: none !important; }
+body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing; user-select: none; }
 .tod-drag-preview { position: fixed; z-index: calc(var(--layer-popover, 100) + 10); top: 0; left: 0; max-width: min(260px, calc(100vw - 16px)); padding: 8px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid var(--background-modifier-border-hover); border-radius: var(--radius-m); background: var(--background-primary); color: var(--text-normal); box-shadow: var(--shadow-m); font-size: var(--font-ui-small); font-weight: 500; pointer-events: none; }
 .tod-drag-preview.is-valid-drop { border-color: var(--interactive-accent); }
 .tod-insertion-marker { position: fixed; z-index: calc(var(--layer-popover, 100) + 1); border-radius: 1px; background: var(--interactive-accent); opacity: .8; pointer-events: none; }
@@ -184,7 +184,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-recent-file-icon svg { display: block; width: var(--tod-identity-icon-size); height: var(--tod-identity-icon-size); stroke-width: 2; }
 .tod-recent-title { display: block; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--font-ui-small); text-align: left; white-space: nowrap; line-height: 20px; }
 .tod-recent, .tod-folder-row { border-radius: var(--radius-s); }
-.tod-recent:is(:hover, :has(:focus-visible)), .tod-folder-row:is(:hover, :has(:focus-visible)) { background: var(--background-modifier-hover); }
+.tod-recent:is(:hover, :focus-within), .tod-folder-row:is(:hover, :focus-within) { background: var(--background-modifier-hover); }
 .tod-source-note { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .tod-source-note > button.tod-source-link { flex: 1 1 0; width: 0; min-width: 0; }
 /* Recent rows own their columns, even when the note is already on the desk. */
@@ -202,7 +202,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-shell.has-desk .tod-base-host .internal-link[data-href] { cursor: grab; touch-action: auto; }
 @media (hover: hover) and (pointer: fine) {
   .tod-shell button.tod-source-grip { opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
-  .tod-shell .tod-source-note:is(:hover, :has(:focus-visible), .is-dragging) button.tod-source-grip { opacity: 1; pointer-events: auto; }
+  .tod-shell .tod-source-note:is(:hover, :focus-within, .is-dragging) button.tod-source-grip { opacity: 1; pointer-events: auto; }
 }
 /* Keep a visible, quiet scrollbar in each content area, with stronger contrast on interaction. */
 .tod-shell :is(.tod-widget-body, .tod-recents, .tod-stack-popover-list, .tod-note-popover-body, .tod-base-host, .bases-view, .cm-scroller, .tod-writing-chart) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text-muted) 30%, transparent) transparent; }
@@ -232,38 +232,38 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 /* The desk supplies the outer inset; native Base lists only need their marker gutter. */
 .tod-shell .tod-base-host .bases-view[data-view-type="list"] { --bases-view-padding: 4px 0; padding: var(--bases-view-padding); }
 .tod-base-host .bases-list-item { box-sizing: border-box; inline-size: 100%; margin-inline: 0; padding-inline: 0; }
-.tod-base-host .bases-list-item:has(> .bases-list-item-properties > .bases-list-property:first-child > .list-bullet) { padding-inline-start: 16px; }
+.tod-base-host .bases-list-item.tod-bulleted { padding-inline-start: 16px; }
 .tod-base-host .bases-list-item-properties > .bases-list-property:first-child > .list-bullet { box-sizing: border-box; width: 16px; margin-inline-start: -16px; padding-inline-end: 0; }
-.tod-base-host .bases-list-item:has(> .bases-list-item-properties > .bases-list-property:first-child > .list-number) { padding-inline-start: calc(3 * var(--bases-table-font-size)); }
+.tod-base-host .bases-list-item.tod-numbered { padding-inline-start: calc(3 * var(--bases-table-font-size)); }
 .tod-base-host .bases-list-item-properties > .bases-list-property:first-child > .list-number { box-sizing: border-box; }
 .tod-shell .tod-note-editor { position: relative; display: flex; box-sizing: border-box; width: 100%; flex: 1 0 80px; min-width: 0; min-height: 80px; height: 0; resize: none; overflow: hidden; background: var(--background-primary-alt); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); color: var(--text-normal); --file-line-width: 100%; --file-margins: 0; }
 .tod-note-editor:focus-within { border-color: var(--background-modifier-border-focus); }
 .tod-note-editor > .markdown-source-view { width: 100%; height: 100%; padding: 0; background: transparent; font-family: var(--font-text); font-size: var(--font-ui-small); line-height: 1.5; }
 .tod-note-editor .cm-editor { height: 100%; background: transparent; }
 .tod-note-editor .cm-scroller { overflow: auto; overscroll-behavior: auto; }
-.tod-note-editor .cm-sizer { width: 100%; min-width: 0; min-height: 100% !important; margin: 0; padding: 0; }
+.tod-shell .tod-note-editor .markdown-source-view.mod-cm6 .cm-sizer { width: 100%; min-width: 0; min-height: 100%; margin: 0; padding: 0; }
 .tod-note-editor .cm-contentContainer { width: 100%; min-width: 0; }
-.tod-note-editor .cm-content { min-height: 100%; padding: 9px 10px !important; }
+.tod-shell .tod-note-editor .markdown-source-view.mod-cm6 .cm-content { min-height: 100%; padding: 9px 10px; }
 .tod-note-editor .cm-placeholder { color: var(--text-muted); }
 /* One source-opening control sits inside each content surface, independent of its heading. */
 .tod-source-frame { position: relative; display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; min-height: 0; }
 .tod-source-frame .tod-base-host, .tod-source-frame .tod-folder-list { box-sizing: border-box; padding-block-end: 40px; }
 .tod-note-editor { --tod-source-control-background: var(--background-primary-alt); }
-.tod-note-editor .cm-content { padding-block-end: 40px !important; }
+.tod-shell .tod-note-editor .markdown-source-view.mod-cm6 .cm-content { padding-block-end: 40px; }
 .tod-shell button.tod-open-source { position: absolute; z-index: 2; inset-block-end: 6px; inset-inline-end: 6px; width: 28px; height: 28px; padding: 6px; border: 0; border-radius: var(--radius-m); background: var(--tod-source-control-background, var(--background-primary)); color: var(--text-muted); }
 .tod-shell button.tod-open-source:is(:hover, :focus-visible) { background: linear-gradient(var(--background-modifier-hover), var(--background-modifier-hover)), var(--tod-source-control-background, var(--background-primary)); color: var(--text-normal); }
 @media (hover: hover) and (pointer: fine) {
   .tod-shell button.tod-open-source { opacity: 0; pointer-events: none; transition: opacity 120ms ease; }
-  .tod-shell .tod-widget:is(:hover, :focus-visible, :has(:focus-visible)) button.tod-open-source:not(.tod-open-note),
-  .tod-shell .tod-card:is(:hover, :has(:focus-visible)) button.tod-open-note,
+  .tod-shell .tod-widget:is(:hover, :focus-visible, :focus-within) button.tod-open-source:not(.tod-open-note),
+  .tod-shell .tod-card:is(:hover, :focus-within) button.tod-open-note,
   .tod-shell button.tod-open-source:focus-visible { opacity: 1; pointer-events: auto; }
 }
 @media (pointer: coarse) {
-  .tod-note-editor .cm-content { padding-block-end: 56px !important; }
+  .tod-shell .tod-note-editor .markdown-source-view.mod-cm6 .cm-content { padding-block-end: 56px; }
   .tod-source-frame .tod-base-host, .tod-source-frame .tod-folder-list { padding-block-end: 56px; }
 }
 .tod-note-status { color: var(--text-muted); font-size: var(--font-ui-smaller); line-height: 16px; overflow-wrap: anywhere; }
-.tod-note-status:not(.has-error) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tod-note-status:not(.has-error) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .tod-note-status.has-error { flex-shrink: 0; margin-top: 8px; color: var(--text-warning); }
 .tod-note-actions:empty { display: none; }
 .tod-note-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
@@ -314,7 +314,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
   .tod-shell button.tod-reorder-note {
     opacity: 0; pointer-events: none;
   }
-  .tod-shell :is(.tod-card, .tod-stack-note-row):is(:hover, :has(:focus-visible), .is-dragging) .tod-reorder-note {
+  .tod-shell :is(.tod-card, .tod-stack-note-row):is(:hover, :focus-within, .is-dragging) .tod-reorder-note {
     opacity: 1; pointer-events: auto;
   }
 }
@@ -324,11 +324,6 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
   .tod-shell.tod-stack-popover, .tod-shell.tod-folder-popover, .tod-shell.tod-note-popover { animation: none; }
   .tod-shell button.tod-source-grip, .tod-shell button.tod-open-source { transition: none; }
   .tod-shell button.tod-reorder-note { transition: none; }
-}
-
-/* Match group headings to the label inset inside the native settings box. */
-.tod-settings-page .setting-group > .setting-item-heading {
-  padding-inline: calc(var(--setting-items-padding-x, 20px) + var(--setting-items-border-width, 0px));
 }
 
 .tod-size-picker { --tod-size-unit: 26px; --tod-size-gap: 4px; position: fixed; z-index: var(--layer-popover, 100); box-sizing: border-box; width: max(148px, calc(22px + var(--tod-size-columns, 4) * (var(--tod-size-unit) + var(--tod-size-gap)) - var(--tod-size-gap))); max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; padding: 10px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); box-shadow: var(--shadow-s); color: var(--text-normal); }
@@ -371,7 +366,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .modal.tod-widget-dialog button.tod-dialog-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
 .modal.tod-widget-dialog button.tod-dialog-close:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
 .tod-widget-dialog .modal-content { flex: 0 1 auto; min-height: 0; margin: 0; padding: 0; overflow-y: auto; scrollbar-width: thin; }
-.tod-widget-dialog [hidden] { display: none !important; }
+.tod-widget-dialog [hidden] { display: none; }
 .tod-widget-form { display: flex; flex-direction: column; gap: 16px; }
 .tod-widget-field { display: flex; flex-direction: column; min-width: 0; gap: 6px; font-size: var(--font-ui-small); font-weight: 500; }
 .tod-widget-field-label { display: flex; align-items: baseline; gap: 8px; }
@@ -416,7 +411,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-writing-chart { box-sizing: border-box; display: grid; grid-template-columns: var(--tod-calendar-label-width, 36px) auto; grid-template-rows: max-content auto; flex: 0 1 auto; gap: 6px 8px; align-self: center; font-size: var(--tod-meta-font-size); line-height: max(var(--tod-meta-line-height), 1.4em); width: max-content; max-width: 100%; min-width: 0; min-height: 0; padding: 3px; overflow: auto; overscroll-behavior: auto; }
 .tod-writing-weekdays { display: grid; grid-area: 2 / 1; grid-template-rows: repeat(7, var(--tod-day-size)); gap: 3px; color: var(--text-muted); font-size: inherit; }
 .tod-writing-weekdays > span { display: flex; align-items: center; line-height: 1; }
-.tod-writing-months { min-width: 0; display: grid; grid-area: 1 / 2; grid-template-columns: repeat(var(--tod-weeks), var(--tod-day-size)); column-gap: 3px; color: var(--text-muted); font-size: inherit; line-height: inherit; }
+.tod-writing-months { min-width: 0; display: grid; grid-area: 1 / 2; grid-template-columns: repeat(var(--tod-weeks), var(--tod-day-size)); gap: 0 3px; color: var(--text-muted); font-size: inherit; line-height: inherit; }
 .tod-writing-months > span { grid-row: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tod-writing-days { display: grid; grid-area: 2 / 2; grid-template-rows: repeat(7, var(--tod-day-size)); grid-auto-columns: var(--tod-day-size); grid-auto-flow: column; gap: 3px; }
 .tod-writing-activity.is-vertical .tod-writing-weekdays { grid-area: 1 / 2; grid-template-columns: repeat(7, var(--tod-day-size)); grid-template-rows: auto; }
@@ -466,8 +461,8 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-widget-drop-label { max-width: 100%; padding: 5px 8px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); text-align: center; line-height: 1.4; }
 .tod-widgets.is-widget-placing, .tod-widgets.is-widget-placing > .tod-widget { cursor: crosshair; }
 .tod-widgets.is-widget-placing .tod-widget.is-placing { border-color: var(--interactive-accent); }
-.tod-widgets.is-widget-placing :is(.tod-widget-body, .tod-widget-body *, .tod-section-heading, .tod-section-heading *, .tod-open-source) { pointer-events: none !important; }
-.tod-layout-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tod-widgets.is-widget-placing :is(.tod-widget-body, .tod-widget-body *, .tod-section-heading, .tod-section-heading *, .tod-open-source) { pointer-events: none; }
+.tod-layout-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 /* Destination outlines explain collisions while every real section remains stationary. */
 .tod-widget-shift-preview { position: absolute; z-index: 5; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 8px; border: 1px dashed var(--interactive-accent); border-radius: var(--radius-l); background: color-mix(in srgb, var(--interactive-accent) 6%, transparent); color: var(--text-muted); font-size: var(--font-ui-smaller); pointer-events: none; }
@@ -520,13 +515,13 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-header h1[role="button"] { cursor: text; }
 .tod-header h1[role="button"]:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 4px; border-radius: var(--radius-s); }
 .tod-widget-controls { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 100ms ease, visibility 0s 100ms; }
-.tod-widget:is(.is-controls-open, .is-placing, :focus-visible, :has(:focus-visible)) > .tod-widget-controls,
-.tod-widget-controls:has(button[aria-expanded="true"]) { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.tod-widget:is(.is-controls-open, .is-placing, :focus-visible, :focus-within) > .tod-widget-controls,
+.tod-widget-controls.has-expanded-control { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .tod-shell button.tod-item-tools-toggle { display: none; position: absolute; z-index: 8; inset-block-start: 3px; inset-inline-end: 3px; color: var(--text-faint); background: var(--background-primary); }
 @media (hover: hover) and (pointer: fine) {
   .tod-widget:hover > .tod-widget-controls { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 180ms; }
   /* Titles handle pointer dragging. Retain Move for keyboard placement and hidden headings. */
-  .tod-shell .tod-widget.has-drag-heading:not(:focus-visible):not(:has(:focus-visible)) > .tod-widget-controls button.tod-widget-grip[aria-pressed="false"] { display: none; }
+  .tod-shell .tod-widget.has-drag-heading:not(:focus-visible):not(:focus-within) > .tod-widget-controls button.tod-widget-grip[aria-pressed="false"] { display: none; }
 }
 @media (hover: none), (pointer: coarse) {
   .tod-shell button.tod-item-tools-toggle { display: inline-flex; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 14px; }
@@ -542,7 +537,7 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 .tod-widget-widget-stack > .tod-widget-body { overflow: hidden; }
 .tod-widget.is-stack-member { flex: 1 1 0; height: 100%; border: 0; padding: 0; border-radius: 0; background: transparent; }
 .tod-widget.is-stack-member.tod-widget-compact { --tod-source-control-background: var(--background-primary); }
-.tod-widget.is-stack-member > :is(.tod-widget-controls, .tod-item-tools-toggle) { display: none !important; }
+.tod-widget.is-stack-member > :is(.tod-widget-controls, .tod-item-tools-toggle) { display: none; }
 .tod-widget.is-stack-member.tod-widget-cover .tod-card { padding: 0 0 var(--tod-stack-overlay-clearance); border: 0; background: transparent; }
 /* Stack identities retain one row when switching between source types. */
 .tod-widget.is-stack-member .tod-card-heading button.tod-card-title { align-items: center; }
@@ -560,21 +555,21 @@ body.tod-pointer-dragging, body.tod-pointer-dragging * { cursor: grabbing !impor
 /* Keep the current tab keyboard reachable while the pointer-only surface is hidden. */
 @media (hover: hover) and (pointer: fine) {
   .tod-widget-stack-switcher { opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
-  .tod-widget-widget-stack:is(:hover, :focus-visible, :has(:focus-visible), .is-controls-open) > .tod-widget-stack-switcher,
+  .tod-widget-widget-stack:is(:hover, :focus-visible, :focus-within, .is-controls-open) > .tod-widget-stack-switcher,
   .tod-widget-stack-switcher.is-swiping { opacity: 1; pointer-events: auto; }
 }
 /* Scroll content can pass underneath; its last line and source action can clear the overlay. */
 .tod-widget.is-stack-member .tod-recents { box-sizing: border-box; padding-block-end: var(--tod-stack-overlay-clearance); }
 .tod-widget.is-stack-member .tod-writing-footer { padding-block-end: var(--tod-stack-overlay-clearance); }
 .tod-shell .tod-widget.is-stack-member button.tod-scratch-selection { inset-block-end: max(6px, var(--tod-stack-overlay-clearance)); }
-.tod-widget.is-stack-member .tod-note-editor .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)) !important; }
-.tod-widget.is-stack-member .tod-note-editor:has(> .tod-scratch-selection) .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 36px)) !important; }
+.tod-shell .tod-widget.is-stack-member .tod-note-editor .markdown-source-view.mod-cm6 .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+.tod-shell .tod-widget.is-stack-member .tod-note-editor.has-selection-action .markdown-source-view.mod-cm6 .cm-content { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 36px)); }
 .tod-widget.is-stack-member .tod-source-frame :is(.tod-base-host, .tod-folder-list) { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
 .tod-widget.is-stack-member.tod-widget-source-card > .tod-source-frame > .tod-widget-body { padding-block-end: max(40px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
-.tod-widget.is-stack-member .tod-note-status.has-error:has(+ .tod-note-actions:empty), .tod-widget.is-stack-member .tod-note-actions:not(:empty) { padding-block-end: var(--tod-stack-overlay-clearance); }
+.tod-widget.is-stack-member .tod-note-status.has-error.has-no-actions, .tod-widget.is-stack-member .tod-note-actions:not(:empty) { padding-block-end: var(--tod-stack-overlay-clearance); }
 @media (hover: none), (pointer: coarse) {
-  .tod-widget.is-stack-member .tod-note-editor .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)) !important; }
-  .tod-widget.is-stack-member .tod-note-editor:has(> .tod-scratch-selection) .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 52px)) !important; }
+  .tod-shell .tod-widget.is-stack-member .tod-note-editor .markdown-source-view.mod-cm6 .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
+  .tod-shell .tod-widget.is-stack-member .tod-note-editor.has-selection-action .markdown-source-view.mod-cm6 .cm-content { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 52px)); }
   .tod-widget.is-stack-member .tod-source-frame :is(.tod-base-host, .tod-folder-list) { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
   .tod-widget.is-stack-member.tod-widget-source-card > .tod-source-frame > .tod-widget-body { padding-block-end: max(56px, calc(var(--tod-stack-overlay-clearance) + 8px)); }
 }
@@ -598,13 +593,13 @@ body.tod-pointer-dragging [aria-label] { --no-tooltip: true; }
   .tod-shell button.tod-resume-note { flex-shrink: 0; }
 }
 @container tod-cover (max-height: 120px) and (max-width: 260px) {
-  .tod-metadata-group:has(> .tod-resume-note:not([hidden])) .tod-metadata-summary > .tod-stack-words { display: none; }
+  .tod-metadata-group.has-resume .tod-metadata-summary > .tod-stack-words { display: none; }
 }
 
 /* Collection browsers share a title line and a quiet excerpt/count line. */
 .tod-shell .tod-browser-count.tod-metadata-pill { flex: 0 0 auto; }
 .tod-browser-note { position: relative; align-items: flex-start; gap: 8px; padding: 0 var(--tod-list-inset) 0 0; }
-.tod-browser-note:is(:hover, :has(:focus-visible), .is-menu-open) { background: color-mix(in srgb, var(--background-modifier-hover) 65%, transparent); }
+.tod-browser-note:is(:hover, :focus-within, .is-menu-open) { background: color-mix(in srgb, var(--background-modifier-hover) 65%, transparent); }
 .tod-shell .tod-browser-note button.tod-folder-link { align-items: flex-start; padding: 4px 0 4px var(--tod-list-inset); }
 .tod-shell .tod-browser-note button.tod-folder-link:hover:not(:disabled) { color: var(--text-normal); }
 .tod-browser-note .tod-list-identity { gap: 1px; }
@@ -615,26 +610,26 @@ body.tod-pointer-dragging [aria-label] { --no-tooltip: true; }
 .tod-browser-context > span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: inherit; }
 .tod-browser-excerpt { flex: 1 1 0; }
 .tod-browser-context > .tod-source-path { flex: 0 1 auto; max-width: 100%; }
-.tod-browser-context:has(> .tod-browser-excerpt:not([hidden])) > .tod-source-path { max-width: 45%; }
-.tod-browser-context:has(> .tod-browser-excerpt:not([hidden])) > .tod-source-path::after { content: ' ·'; }
+.tod-browser-context.has-excerpt > .tod-source-path { max-width: 45%; }
+.tod-browser-context.has-excerpt > .tod-source-path::after { content: ' ·'; }
 .tod-browser-words { flex: 0 0 auto; max-width: 50%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tod-meta-color); font: inherit; font-variant-numeric: tabular-nums; }
 .tod-browser-note > .tod-icon-button { margin-top: 2px; }
 /* The existing status remains accessible; its accent uses the leading icon, without another column. */
-.tod-folder-row > .tod-last-worked-marker, .tod-stack-note-row > .tod-last-worked-marker { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.tod-folder-row:has(> .tod-last-worked-marker) .tod-recent-file-icon, .tod-shell .tod-browser-note:has(> .tod-last-worked-marker) > button.tod-browser-grip { color: var(--text-accent); }
+.tod-folder-row > .tod-last-worked-marker, .tod-stack-note-row > .tod-last-worked-marker { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.tod-folder-row.has-last-worked .tod-recent-file-icon, .tod-shell .tod-browser-note.has-last-worked > button.tod-browser-grip { color: var(--text-accent); }
 /* The file icon doubles as the grip. Only one secondary-action slot is reserved. */
-.tod-stack-note-row { position: relative; display: grid; grid-template-columns: var(--tod-identity-icon-size) minmax(0, 1fr) var(--tod-content-control-size); align-items: start; column-gap: var(--tod-list-gap); padding: 4px var(--tod-list-inset); }
+.tod-stack-note-row { position: relative; display: grid; grid-template-columns: var(--tod-identity-icon-size) minmax(0, 1fr) var(--tod-content-control-size); align-items: start; gap: 0 var(--tod-list-gap); padding: 4px var(--tod-list-inset); }
 .tod-shell .tod-stack-note-row button.tod-folder-link { width: 100%; min-height: 20px; padding: 0; }
 .tod-shell .tod-stack-note-row > button.tod-browser-grip { display: flex; align-items: center; justify-content: center; width: 24px; min-width: 24px; height: 24px; min-height: 24px; margin: -2px -4px 0; padding: 4px; opacity: 1; pointer-events: auto; color: var(--text-muted); }
 .tod-browser-grip > span { display: flex; }
 .tod-shell .tod-stack-note-row > button.tod-browser-grip svg { width: var(--tod-identity-icon-size); height: var(--tod-identity-icon-size); }
 .tod-browser-grip > .tod-browser-drag-symbol { display: none; }
-.tod-stack-note-row:is(:hover, :has(:focus-visible), .is-dragging) .tod-browser-file-symbol { display: none; }
-.tod-stack-note-row:is(:hover, :has(:focus-visible), .is-dragging) .tod-browser-drag-symbol { display: flex; }
+.tod-stack-note-row:is(:hover, :focus-within, .is-dragging) .tod-browser-file-symbol { display: none; }
+.tod-stack-note-row:is(:hover, :focus-within, .is-dragging) .tod-browser-drag-symbol { display: flex; }
 .tod-shell .tod-stack-note-row > button.tod-browser-more { margin-top: -2px; }
 @media (hover: hover) and (pointer: fine) {
   .tod-browser-more { opacity: 0; pointer-events: none; }
-  .tod-stack-note-row:is(:hover, :has(:focus-visible), .is-menu-open) > .tod-browser-more { opacity: 1; pointer-events: auto; }
+  .tod-stack-note-row:is(:hover, :focus-within, .is-menu-open) > .tod-browser-more { opacity: 1; pointer-events: auto; }
 }
 @media (pointer: coarse) {
   .tod-stack-note-row { grid-template-columns: 44px minmax(0, 1fr) 44px; }
@@ -657,11 +652,11 @@ body.tod-pointer-dragging [aria-label] { --no-tooltip: true; }
 .tod-widget.tod-widget-compact:not(.is-stack-member) > .tod-section-heading { padding-inline-end: 28px; }
 .tod-widget.tod-widget-compact > .tod-source-frame { position: static; flex: 0 0 auto; }
 .tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body { flex: 0 0 auto; overflow: visible; gap: 0; padding: 0; }
-.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body:not(:has(> :not([hidden]))) { display: none; }
-.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body:has(> :not([hidden])) { margin-block-start: var(--tod-compact-gap); }
+.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body:not(.has-content) { display: none; }
+.tod-widget.tod-widget-compact > .tod-source-frame > .tod-widget-body.has-content { margin-block-start: var(--tod-compact-gap); }
 .tod-shell .tod-widget-compact:not(.is-stack-member) > .tod-source-frame > button.tod-open-source { inset-block-start: calc(50% - 12px); inset-block-end: auto; inset-inline-end: 8px; width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 4px; background: transparent; }
-.tod-shell .tod-widget-compact:not(.is-stack-member):has(> .tod-source-frame > .tod-widget-body > :not([hidden])) > .tod-source-frame > button.tod-open-source { inset-block-start: calc(50% - (var(--tod-compact-gap) + var(--tod-compact-body-height)) / 2 - 12px); }
-.tod-widget-web.tod-widget-compact:has(.tod-compact-site:not([hidden])) { --tod-compact-body-height: var(--tod-meta-line-height); }
+.tod-shell .tod-widget-compact:not(.is-stack-member).has-source-content > .tod-source-frame > button.tod-open-source { inset-block-start: calc(50% - (var(--tod-compact-gap) + var(--tod-compact-body-height)) / 2 - 12px); }
+.tod-widget-web.tod-widget-compact.has-site-context { --tod-compact-body-height: var(--tod-meta-line-height); }
 .tod-widget-compact .tod-compact-site { box-sizing: border-box; padding-inline-start: calc(var(--tod-identity-icon-size) + var(--tod-list-gap)); }
 .tod-shell .tod-widget-compact button.tod-source-recovery { height: 24px; min-height: 24px; max-width: 100%; padding: 0; overflow: hidden; text-overflow: ellipsis; border: 0; background: transparent; box-shadow: none; color: var(--text-accent); font: inherit; font-size: var(--tod-meta-font-size); text-align: start; }
 .tod-widget.is-stack-member.tod-widget-compact { --tod-compact-heading-height: var(--tod-widget-heading-height); justify-content: flex-start; padding: 0 0 calc(var(--tod-stack-overlay-clearance) + 8px); }
@@ -690,3 +685,7 @@ body.tod-pointer-dragging [aria-label] { --no-tooltip: true; }
   .tod-shell button.tod-audio-button { flex-basis: 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 12px; }
   .tod-shell .tod-widget-compact button.tod-source-recovery { height: 44px; min-height: 44px; }
 }
+
+/* Keep semantic hidden states stronger than presentation rules, including stacked controls. */
+body .workspace-leaf-content[data-type="top-of-the-desk-home"] .tod-shell [hidden],
+body .modal-container .tod-widget-dialog [hidden] { display: none; }

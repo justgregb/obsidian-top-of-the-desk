@@ -1,4 +1,4 @@
-import { readFile, mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { readFile, mkdir, copyFile, writeFile, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
@@ -13,10 +13,13 @@ const main = await readFile(join(repo,'main.js'));
 if (!main.toString('utf8').startsWith(`/* Top of the Desk — ${manifest.version} */`)) throw new Error('Bundle version does not match. Run npm run bundle.');
 if(manifest.description.length > 250 || !manifest.description.endsWith('.')) throw new Error('Description must be at most 250 characters and end with a period.');
 const dest = join(repo,'dist',manifest.version); await mkdir(dest,{recursive:true});
+// Remove the checksum file left by the older packager, if present.
+await rm(join(dest,'SHA256SUMS.txt'), { force: true });
 const checksums=[];
 for(const name of ['main.js','manifest.json','styles.css']) {
   const bytes=await readFile(join(repo,name)); await copyFile(join(repo,name),join(dest,name));
   checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${name}`);
 }
-await writeFile(join(dest,'SHA256SUMS.txt'),checksums.join('\n')+'\n');
+// Checksums are local verification data, not an Obsidian release asset.
+await writeFile(join(repo,'dist',`${manifest.version}-SHA256SUMS.txt`),checksums.join('\n')+'\n');
 console.log(`Release assets: ${dest}\nTag must be exactly ${manifest.version}, without a v prefix. This command does not publish anything.`);

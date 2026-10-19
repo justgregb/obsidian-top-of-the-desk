@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 
+// Obsidian runs these stores in a renderer window.
+globalThis.window = globalThis;
+
 const dir = await mkdtemp(join(tmpdir(), 'top-of-desk-tests-'));
 await build({ entryPoints: ['src/model.ts', 'src/scratch.ts', 'src/word-count.ts'], bundle: true, format: 'cjs', platform: 'node', outdir: dir });
 const require = createRequire(import.meta.url);

@@ -62,7 +62,7 @@ export function watchPopover(el: HTMLElement, anchor: () => HTMLElement | null, 
   const tooltips = new ControlTooltips(el);
   tooltips.load();
   hooks.position();
-  const backdrop = doc.createElement('div'); backdrop.className = 'tod-browser-backdrop'; backdrop.hidden = !el.hasClass('is-sheet');
+  const backdrop = doc.adoptNode(createFragment()).createDiv(); backdrop.className = 'tod-browser-backdrop'; backdrop.hidden = !el.hasClass('is-sheet');
   el.before(backdrop);
   const outside = (event: Event) => {
     // A child menu owns focus and outside dismissal until it closes.

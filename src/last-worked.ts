@@ -1,3 +1,4 @@
+import { isUnknownArray } from './validation';
 import type { App } from 'obsidian';
 import { DeskItem, deskPaths, renamePath, safePath } from './model';
 
@@ -9,8 +10,8 @@ export class LastWorkedNotes {
 
   constructor(private app: App) {
     try {
-      const stored = app.loadLocalStorage(STORAGE);
-      if (Array.isArray(stored)) this.paths = [...new Set(stored.filter((path): path is string => typeof path === 'string' && !!safePath(path, 'md')))].slice(0, 300);
+      const stored: unknown = app.loadLocalStorage(STORAGE);
+      if (isUnknownArray(stored)) this.paths = [...new Set(stored.filter((path): path is string => typeof path === 'string' && !!safePath(path, 'md')))].slice(0, 300);
     } catch (error) { console.error('Top of the Desk: could not load the last-worked marker', error); }
   }
 

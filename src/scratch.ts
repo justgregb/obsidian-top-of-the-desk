@@ -19,7 +19,7 @@ export class ScratchStore {
   dirty = false;
   private revision = 0;
   private writing: Promise<void> | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private timer: number | null = null;
   private listeners = new Set<() => void>();
   private stopped = false;
   private prefix = '';
@@ -75,8 +75,8 @@ export class ScratchStore {
     if (!this.conflict) this.schedule();
   }
   private schedule(): void {
-    if (this.timer) clearTimeout(this.timer);
-    if (!this.stopped) this.timer = setTimeout(() => { this.timer = null; void this.flush(); }, 550);
+    if (this.timer) window.clearTimeout(this.timer);
+    if (!this.stopped) this.timer = window.setTimeout(() => { this.timer = null; void this.flush(); }, 550);
   }
   async refresh(): Promise<void> {
     if (!this.loaded || this.writing) return;
@@ -91,7 +91,7 @@ export class ScratchStore {
     } catch { this.error = DRAFT_COPY.refreshError; this.notify(); }
   }
   async flush(): Promise<void> {
-    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    if (this.timer) { window.clearTimeout(this.timer); this.timer = null; }
     if (this.writing) return this.writing;
     if (!this.loaded || !this.dirty || this.conflict) return;
     this.writing = this.writeLoop();
@@ -124,7 +124,7 @@ export class ScratchStore {
   repath(): void { this.recover(); }
   stop(): void {
     this.stopped = true;
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer) window.clearTimeout(this.timer);
     this.recover();
     void this.flush();
   }

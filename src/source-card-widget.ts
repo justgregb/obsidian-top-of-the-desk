@@ -22,7 +22,7 @@ export class SourceCardWidget extends Component {
     const key = JSON.stringify([settings.type, settings.enabled, settings.path, available, settings.type === 'image' ? file?.stat.mtime : null]);
     if (key !== this.key) {
       this.key = key; this.releaseAudio(); this.body.empty(); this.site = null;
-      if (!settings.enabled) return;
+      if (!settings.enabled) { this.syncContent(); return; }
       if (!available) {
         const message = settings.type === 'web'
           ? settings.path ? 'Enter a valid web address.' : 'Enter a web address.'
@@ -55,6 +55,13 @@ export class SourceCardWidget extends Component {
       updateText(this.site, site);
       this.site.hidden = !site;
     }
+    this.syncContent();
+  }
+  private syncContent(): void {
+    const visible = Array.from(this.body.children).some(child => !child.hasAttribute('hidden'));
+    this.body.toggleClass('has-content', visible);
+    this.body.closest('.tod-widget')?.toggleClass('has-source-content', visible);
+    this.body.closest('.tod-widget')?.toggleClass('has-site-context', !!this.site && !this.site.hidden);
   }
   private releaseAudio(): void {
     if (!this.audio) return;
@@ -64,6 +71,7 @@ export class SourceCardWidget extends Component {
     const button = this.body.createEl('button', { cls: 'tod-source-recovery', text: label,
       attr: { type: 'button', 'aria-label': `${message} ${label}` } });
     updateTooltip(button, `${message} ${label}`); button.onclick = run;
+    this.syncContent();
   }
   onunload(): void { this.releaseAudio(); this.key = ''; this.body.empty(); }
 }

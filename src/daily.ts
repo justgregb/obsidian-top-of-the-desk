@@ -29,7 +29,7 @@ export class DailyNoteStore {
   private status = '';
   private statusStore: ScratchStore | null = null;
 
-  constructor(private app: App, private findNote?: (path: string) => TFile | null) {}
+  constructor(private app: App, private findNote: (path: string) => TFile | null) {}
   get dateFormat(): string { return this.core()?.getFormat() || 'YYYY-MM-DD'; }
   get displayName(): string {
     return this.store ? this.path.split('/').pop()!.replace(/\.md$/i, '') : formatDeskDate(new Date(), this.dateFormat);
@@ -54,8 +54,7 @@ export class DailyNoteStore {
     return app.internalPlugins.getEnabledPluginById('daily-notes');
   }
   private file(path: string): TFile | null {
-    if (this.findNote) return this.findNote(path);
-    return this.app.vault.getFileByPath(path) ?? this.app.vault.getMarkdownFiles().find(file => file.path.toLowerCase() === path.toLowerCase()) ?? null;
+    return this.findNote(path);
   }
   sync(): Promise<void> {
     if (this.stopped) return Promise.resolve();

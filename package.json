@@ -1,24 +1,36 @@
 {
   "name": "top-of-the-desk",
-  "version": "0.9.51",
+  "version": "0.9.52",
   "private": true,
   "description": "Top of the Desk keeps your current work within reach.",
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs",
-    "test": "node tests/run.mjs && node tests/release.mjs",
+    "test": "node tests/run.mjs && node tests/release.mjs && node tests/review.mjs",
     "bundle": "node esbuild.config.mjs",
     "demo": "node scripts/prepare-demo.mjs",
     "package": "node scripts/package-release.mjs",
     "typecheck": "tsc --noEmit",
-    "test:obsidian": "node scripts/test-obsidian.mjs"
+    "test:obsidian": "node scripts/test-obsidian.mjs",
+    "lint": "npm run lint:source && npm run lint:css",
+    "lint:source": "eslint src --max-warnings 0",
+    "lint:css": "node scripts/lint-css.mjs"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.38.6",
+    "@eslint/js": "10.0.1",
     "@types/node": "22.10.2",
     "esbuild": "0.25.12",
+    "eslint": "10.13.0",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "obsidian": "1.13.1",
-    "typescript": "5.9.3"
+    "postcss": "8.5.31",
+    "postcss-selector-parser": "7.1.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "moment": "2.31.0"
+  }
 }

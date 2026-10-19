@@ -4,7 +4,8 @@ const tooltips = new WeakMap<HTMLElement, string>();
 interface ElementBounds { left: number; top: number; width: number; height: number; }
 const overlayBounds = new WeakMap<HTMLElement, ElementBounds>();
 export const HOVER_DELAY_MS = 400;
-export const compareNames = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare;
+const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+export const compareNames = (a: string, b: string): number => nameCollator.compare(a, b);
 
 /** Leave unchanged text and tooltip bindings alone during background refreshes. */
 export function updateText(el: HTMLElement, text: string): void {

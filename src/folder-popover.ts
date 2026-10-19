@@ -44,9 +44,9 @@ export class FolderPopover extends Component {
     const close = actions.createEl('button', { cls: 'tod-icon-button', attr: { 'aria-label': 'Close' } });
     setIcon(close, 'x'); setTooltip(close, 'Close'); close.onclick = () => this.close(true);
     const body = el.createDiv('tod-folder-popover-body');
-    this.browser = this.addChild(new FolderWidget(this.plugin, id, body, this.hooks.note, this.hooks.folder, null, () => this.close(false), () => this.position(), true));
+    this.browser = this.addChild(new FolderWidget(this.plugin, id, body, (row, link, path) => this.hooks.note(row, link, path), (row, link, path) => this.hooks.folder(row, link, path), null, () => this.close(false), () => this.position(), true));
     const stopWatching = watchPopover(el, () => this.anchor, {
-      close: restore => this.close(restore), position: () => this.position(), dragging: this.hooks.dragging
+      close: restore => this.close(restore), position: () => this.position(), dragging: () => this.hooks.dragging()
     });
     // Browsing changes the list's intrinsic height synchronously.
     const position = () => this.position();
