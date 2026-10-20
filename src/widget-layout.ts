@@ -206,7 +206,7 @@ export class WidgetGrid extends Component {
   private preview: HTMLElement;
   private previewLabel: HTMLElement;
   private announcement: HTMLElement;
-  private moving: { id: string; lastRow: number; mode: 'drag' | 'place'; anchor: HTMLButtonElement | null; card: HTMLElement | null; sources?: SourceMove[]; ids?: string[]; draft?: DeskSettings } | null = null;
+  private moving: { id: string; lastRow: number; mode: 'drag' | 'place'; anchor: HTMLElement | null; card: HTMLElement | null; sources?: SourceMove[]; ids?: string[]; draft?: DeskSettings } | null = null;
   private frame = 0;
   private targetFrame = 0;
   private pointer: { x: number; y: number } | null = null;
@@ -251,7 +251,7 @@ export class WidgetGrid extends Component {
   finishSourceMove(): void { if (this.moving?.sources) this.finishMove(); }
   private get moveSettings(): DeskSettings { return this.moving?.draft || this.plugin.settings; }
 
-  togglePlacement(id: string, anchor: HTMLButtonElement): void {
+  togglePlacement(id: string, anchor: HTMLElement): void {
     if (this.moving?.mode === 'place' && this.moving.anchor === anchor) { this.finishMove(true); return; }
     this.beforeMove();
     const card = this.startMove(id, anchor, 'place');
@@ -281,7 +281,8 @@ export class WidgetGrid extends Component {
       begin: (id, source) => {
         this.beforeMove();
         const grip = source.querySelector<HTMLButtonElement>(':scope > .tod-widget-controls .tod-widget-grip');
-        if (grip) this.startMove(id, grip, 'drag');
+        const anchor = grip && !grip.hidden ? grip : source.querySelector<HTMLButtonElement>(':scope > .tod-widget-controls button[aria-label="Edit"]');
+        if (anchor) this.startMove(id, anchor, 'drag');
       },
       move: (_id, x, y) => {
         this.scrollAt(x, y);
@@ -340,7 +341,8 @@ export class WidgetGrid extends Component {
     this.registerDomEvent(win, 'blur', () => this.finishMove());
     this.registerDomEvent(this.grid, 'keydown', event => {
       const grip = event.target as HTMLElement;
-      if (!grip.matches('.tod-widget-grip') || event.altKey || event.ctrlKey || event.metaKey) return;
+      const placing = this.moving?.mode === 'place' && this.moving.anchor === grip;
+      if ((!grip.matches('.tod-widget-grip') && !placing) || event.altKey || event.ctrlKey || event.metaKey) return;
       const directions: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
       const delta = directions[event.key];
       if (!delta) return;
@@ -350,6 +352,8 @@ export class WidgetGrid extends Component {
       const id = grip.closest<HTMLElement>('.tod-widget')?.dataset.widget, rect = id ? this.layout.get(id) : undefined;
       if (id && rect) this.plugin.moveWidgetTo(id, { column: rect.column + delta[0], row: rect.row + delta[1] }, this.columns, undoOrigin(event, grip));
       grip.focus({ preventScroll: true });
+      // Placement from Edit also works when the toolbar is entirely hidden.
+      if (placing && id && !grip.matches('.tod-widget-grip')) this.togglePlacement(id, grip);
       if (id) this.announcePosition(id);
     });
   }
@@ -491,13 +495,13 @@ export class WidgetGrid extends Component {
     this.grid.style.minHeight = `${lastRow * (geometry.rowHeight + geometry.rowGap) - geometry.rowGap}px`;
     this.preview.hidden = false;
   }
-  private startMove(id: string, anchor: HTMLButtonElement, mode: 'drag' | 'place'): HTMLElement | null {
+  private startMove(id: string, anchor: HTMLElement, mode: 'drag' | 'place'): HTMLElement | null {
     this.finishMove(); this.render();
     const rect = this.layout.get(id), card = anchor.closest<HTMLElement>('.tod-widget');
     if (!rect || !this.geometry || !card || card.parentElement !== this.grid) return null;
     this.plugin.sizePicker.close();
     this.moving = { id, anchor, card, mode, lastRow: Math.max(0, ...[...this.layout.values()].map(item => item.row + item.rows - 1)) };
-    anchor.setAttribute('aria-pressed', String(mode === 'place'));
+    if (anchor.hasAttribute('aria-pressed')) anchor.setAttribute('aria-pressed', String(mode === 'place'));
     card.addClass(mode === 'drag' ? 'is-dragging' : 'is-placing');
     this.grid.addClass(mode === 'drag' ? 'is-widget-dragging' : 'is-widget-placing');
     this.previewLabel.setText(mode === 'place' ? 'Move here · Escape to cancel' : 'Move here');
@@ -571,7 +575,7 @@ export class WidgetGrid extends Component {
     this.grid.removeClass('is-widget-dragging', 'is-widget-placing');
     if (!keepSpace) this.grid.style.removeProperty('min-height');
     if (moving) {
-      moving.anchor?.setAttribute('aria-pressed', 'false');
+      if (moving.anchor?.hasAttribute('aria-pressed')) moving.anchor.setAttribute('aria-pressed', 'false');
       moving.card?.removeClass('is-dragging', 'is-placing');
       if (restoreFocus && moving.anchor?.isConnected) { moving.anchor.focus({ preventScroll: true }); this.announcement.setText('Move cancelled.'); }
     }

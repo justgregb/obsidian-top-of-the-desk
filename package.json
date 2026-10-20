@@ -1,11 +1,11 @@
 {
   "name": "top-of-the-desk",
-  "version": "0.9.53",
+  "version": "0.9.66",
   "private": true,
   "description": "Keep notes, files, websites, and writing tools together on a customizable desk.",
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs",
-    "test": "node tests/run.mjs && node tests/release.mjs && node tests/review.mjs",
+    "test": "node tests/run.mjs && node tests/release.mjs && node tests/review.mjs && node tests/web-history.mjs",
     "bundle": "node esbuild.config.mjs",
     "demo": "node scripts/prepare-demo.mjs",
     "package": "node scripts/package-release.mjs",
@@ -13,7 +13,8 @@
     "test:obsidian": "node scripts/test-obsidian.mjs",
     "lint": "npm run lint:source && npm run lint:css",
     "lint:source": "eslint src --max-warnings 0",
-    "lint:css": "node scripts/lint-css.mjs"
+    "lint:css": "node scripts/lint-css.mjs",
+    "test:web-history": "node tests/web-history.mjs"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",

@@ -5,7 +5,7 @@ import { SourceCatalog } from './source-catalog';
 import { fileSourceType, isCompactSourceType, isFileWidgetType, isSourceWidgetType, matchesSourceFile, SOURCE_TYPES, SourceType, sourceWebSite, sourceWebUrl } from './source-types';
 import { SourceCardWidget } from './source-card-widget';
 import { COPY, DRAFT_COPY, draftSaved, openSourceLabel } from './copy';
-import { Events, ItemView, Keymap, Modal, Notice, Plugin, PluginSettingTab, type SettingDefinitionItem, View, TFile, TFolder, WorkspaceLeaf, normalizePath, parseYaml, setIcon, setTooltip } from 'obsidian';
+import { Events, ItemView, Keymap, Menu, Modal, Notice, Plugin, PluginSettingTab, type SettingDefinitionItem, View, TFile, TFolder, WorkspaceLeaf, normalizePath, parseYaml, setIcon, setTooltip } from 'obsidian';
 import { canHideWidgetHeading, canStackWidget, isFixedSizeWidget, isEnabledWidget, isRootWidget, isVisibleWidget, widgetStackFor, widgetStackOwners, widgetHeadingState, itemWidgetId, isCoverWidget, syncDeskWidgets, GridColumns, GridPosition, CollectionCountSettings, DeskItem, DeskSettings, WidgetKey, WidgetSettings, WidgetSize, WIDGET_NAMES, WIDGET_ICONS, widgetDefaults, widgetName, deskPaths, excerpt, itemPaths, normalizeDeskItems, normalizeSettings, removeDeskNote, renamePath, safePath, validRecovery } from './model';
 import { ScratchConflict, ScratchStore } from './scratch';
 import { DailyNoteStore } from './daily';
@@ -22,6 +22,9 @@ import { CollectionDetailsModal } from './collection-details';
 import { ItemEditModal } from './edit-controls';
 import { ControlTooltips } from './control-tooltips';
 import { DESK_ACTION_ICONS, registerDeskIcons } from './collection-icons';
+import { TOOLBAR_ACTIONS, normalizeToolbarActions, normalizeToolbarOrder, type ToolbarAction, type ToolbarControl } from './toolbar-preferences';
+import { renderToolbarSettings } from './toolbar-settings';
+import { toolbarState } from './toolbar-state';
 import { WritingActivity } from './writing-activity';
 import { LastWorkedNotes } from './last-worked';
 import { AddDeskModal, StackNotesModal } from './add-to-desk';
@@ -29,16 +32,17 @@ import { RecentHistory, recentWindow } from './recent-history';
 import { WebHistory, webPageLabel } from './web-history';
 import { ScratchSelectionModal } from './scratch-selection';
 import { WritingHeatmap } from './writing-heatmap';
-import { compareNames, navigateList, reconcileChildren, updateText, updateTooltip } from './ui';
+import { compareNames, navigateList, reconcileChildren, updateAttribute, updateHidden, updateText, updateTooltip } from './ui';
 import { notesInFolder } from './collection-stats';
 import { UndoNotice, UndoOrigin, undoOrigin } from './undo-notice';
 import { WidgetGrid, DeskSource, SourceMove, sourceMoveDraft, sourceMovesDraft, plannedSourceMoves, sourceWidgetId, rememberWidgetLayout, resolveWidgetLayout, resizeWidgetLayout, commitWidgetMove, plannedWidgetMove } from './widget-layout';
 
-interface DeskUpdate { widgets: string[]; content?: boolean; layout?: boolean; pageHeading?: boolean; markers?: boolean; }
+interface DeskUpdate { widgets: string[]; content?: boolean; layout?: boolean; pageHeading?: boolean; markers?: boolean; toolbarOnly?: boolean; }
 function mergeDeskUpdates(a?: DeskUpdate, b?: DeskUpdate): DeskUpdate | undefined {
   if (!a || !b) return undefined;
   return { widgets: [...new Set([...a.widgets, ...b.widgets])], content: a.content !== false || b.content !== false,
-    layout: a.layout || b.layout, pageHeading: a.pageHeading || b.pageHeading, markers: a.markers || b.markers };
+    layout: a.layout || b.layout, pageHeading: a.pageHeading || b.pageHeading, markers: a.markers || b.markers,
+    toolbarOnly: a.toolbarOnly && b.toolbarOnly };
 }
 
 export const VIEW = 'top-of-the-desk-home';
@@ -93,7 +97,7 @@ export default class DeskPlugin extends Plugin {
     catch { new Notice('Couldn’t load Top of the Desk settings. Your saved settings haven’t been changed.'); throw new Error('Desk settings unreadable'); }
     this.addChoicesSignature = this.choiceSignature();
     registerDeskIcons();
-    this.sizePicker = this.addChild(new WidgetSizePicker());
+    this.sizePicker = this.addChild(new WidgetSizePicker(this.app));
     this.activity = new WritingActivity(this.app);
     this.lastWorked = new LastWorkedNotes(this.app);
     this.registerEditorExtension(this.activity.editorExtension(path => this.recordWork(path)));
@@ -325,7 +329,7 @@ export default class DeskPlugin extends Plugin {
       this.editUpdate = this.editPending ? mergeDeskUpdates(this.editUpdate, update) : update;
       this.editPending = true; return;
     }
-    syncDeskWidgets(this.settings);
+    if (!update?.toolbarOnly) syncDeskWidgets(this.settings);
     // A targeted update must not discard a pending vault/content refresh.
     if (!update && this.refreshTimer) { window.clearTimeout(this.refreshTimer); this.refreshTimer = null; this.pendingRefresh = undefined; }
     const snapshot = JSON.parse(JSON.stringify(this.settings)) as DeskSettings;
@@ -336,8 +340,10 @@ export default class DeskPlugin extends Plugin {
       console.error('Top of the Desk: settings save failed', error);
       new Notice('Couldn’t save your desk changes. Keep the desk open and try the change again.');
     });
-    const choiceSignature = this.choiceSignature();
-    if (choiceSignature !== this.addChoicesSignature) { this.addChoicesSignature = choiceSignature; this.addChoicesDirty = true; }
+    if (!update?.toolbarOnly) {
+      const choiceSignature = this.choiceSignature();
+      if (choiceSignature !== this.addChoicesSignature) { this.addChoicesSignature = choiceSignature; this.addChoicesDirty = true; }
+    }
     this.refreshViews(update);
     if (isEnabledWidget(this.settings, 'daily') && (!update || (update.content !== false && update.widgets.includes('daily')))) void this.daily.sync();
   }
@@ -651,6 +657,41 @@ export default class DeskPlugin extends Plugin {
     } else if (isSourceWidgetType(widget.type) || widget.type === 'folder') {
       new SourceWidgetModal(this, widget.type, sourceId, restoreFocus, rootId).open();
     } else new ItemEditModal(this, rootId, sourceId, restoreFocus).open();
+  }
+  get deskColumns(): GridColumns {
+    return this.app.workspace.getActiveViewOfType(DeskView)?.gridColumns ?? 4;
+  }
+  setToolbarActions(actions: readonly ToolbarControl[]): void {
+    const next = normalizeToolbarActions(actions);
+    if (next.join(',') === this.settings.toolbarActions.join(',')) return;
+    this.sizePicker.close();
+    this.settings.toolbarActions = next;
+    this.changed({ widgets: this.settings.widgetOrder, content: false, toolbarOnly: true });
+  }
+  setToolbarOrder(order: readonly ToolbarControl[]): void {
+    const next = normalizeToolbarOrder(order);
+    if (next.join(',') === this.settings.toolbarOrder.join(',')) return;
+    this.sizePicker.close();
+    this.settings.toolbarOrder = next;
+    this.changed({ widgets: this.settings.widgetOrder, content: false, toolbarOnly: true });
+  }
+  moveFromEdit(id: string): void {
+    void this.openDesk().then(() => this.app.workspace.getActiveViewOfType(DeskView)?.moveFromEdit(id));
+  }
+  runToolbarAction(id: string, action: Exclude<ToolbarAction, 'move' | 'resize'>, origin?: UndoOrigin): void {
+    const state = toolbarState(this.settings, id);
+    if (!state.available[action]) return;
+    const root = this.settings.widgets[id], source = this.settings.widgets[state.sourceId];
+    if (action === 'heading') this.setWidgetHeading(id, state.heading === false);
+    else if (action === 'baseToolbar') this.setBaseControls(state.sourceId, state.baseHidden);
+    else if (action === 'addNotes') this.pickStackNotes(source.itemId);
+    else if (action === 'remove') this.removeFromDesk(id, origin);
+    else {
+      const focusId = root.type === 'widget-stack' ? state.sourceId : id;
+      if (root.type === 'widget-stack') this.takeWidgetOut(id, undefined, origin);
+      else if (root.itemId) this.unstack(root.itemId, origin);
+      this.revealDeskWidget(focusId, false);
+    }
   }
   addWidget(type: WidgetKey, source?: WidgetSettings, reveal = true): string | null {
     if (type === 'folder' && source?.path) { const item = this.pinFolder(source.path); if (item) { Object.assign(this.settings.widgets[itemWidgetId(item)], source, { itemId: item, type: 'folder', enabled: true, presentation: 'list' }); this.changed({ widgets: [itemWidgetId(item)], layout: true }); } return item ? itemWidgetId(item) : null; }
@@ -986,7 +1027,8 @@ interface WidgetControls {
   sizeButton: HTMLButtonElement;
   gripButton: HTMLButtonElement;
   editButton: HTMLButtonElement;
-  stackButton?: HTMLButtonElement;
+  actions: Record<ToolbarAction, HTMLButtonElement>;
+  order?: string;
 }
 interface DeskWidget {
   kind: string;
@@ -1034,6 +1076,7 @@ class DeskView extends ItemView {
   private currentScratch: ScratchStore | null = null;
   private widgetGrid!: WidgetGrid;
   private controlTooltips!: ControlTooltips;
+  private itemMenu: Menu | null = null;
   private closed = false;
 
   constructor(leaf: WorkspaceLeaf, private plugin: DeskPlugin) { super(leaf); }
@@ -1065,6 +1108,30 @@ class DeskView extends ItemView {
     this.createQuickActions();
     this.widgetsEl = this.shell.createDiv('tod-widgets');
     this.widgetGrid = this.addChild(new WidgetGrid(this.plugin, this.widgetsEl, () => { this.controlTooltips.hide(); this.deskItems?.dismiss(); }));
+    const contextTarget = (target: HTMLElement): string | undefined => {
+      const source = target.closest<HTMLElement>('.tod-widget');
+      if (!source || !this.widgetsEl.contains(source)) return;
+      // Preserve embedded editors, Base menus, links, and media context menus.
+      if (!target.matches('.tod-widget, .tod-widget-body, .tod-source-frame, .tod-card') &&
+          !target.closest('.tod-section-heading, .tod-card-heading')) return;
+      const id = source.dataset.widget!;
+      return widgetStackFor(this.plugin.settings, id) || id;
+    };
+    this.registerDomEvent(this.widgetsEl, 'contextmenu', event => {
+      if (event.defaultPrevented) return;
+      const id = contextTarget(event.target as HTMLElement);
+      if (!id) return;
+      event.preventDefault(); event.stopPropagation();
+      this.showItemMenu(id, event.clientX, event.clientY);
+    });
+    this.registerDomEvent(this.widgetsEl, 'keydown', event => {
+      if (event.defaultPrevented || event.repeat || !(event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey)) return;
+      const id = contextTarget(event.target as HTMLElement);
+      if (!id) return;
+      event.preventDefault(); event.stopPropagation();
+      const bounds = (event.target as HTMLElement).getBoundingClientRect();
+      this.showItemMenu(id, bounds.left, bounds.top + Math.min(bounds.height, 32));
+    });
     this.registerDomEvent(this.contentEl.ownerDocument, 'pointerdown', event => {
       const target = event.target as HTMLElement;
       for (const widget of this.widgets.values()) if (!widget.el.contains(target)) this.closeItemControls(widget);
@@ -1191,7 +1258,26 @@ class DeskView extends ItemView {
   }
 
   private closeItemControls(widget: DeskWidget): void {
-    widget.el.removeClass('is-controls-open'); widget.toolsToggle.setAttribute('aria-expanded', 'false');
+    if (widget.el.hasClass('is-controls-open')) widget.el.removeClass('is-controls-open');
+    updateAttribute(widget.toolsToggle, 'aria-expanded', 'false');
+  }
+
+  private showItemMenu(id: string, x: number, y: number): void {
+    const widget = this.widgets.get(id);
+    if (this.closed || !widget || !this.plugin.settings.widgets[id]?.enabled) return;
+    this.itemMenu?.hide(); this.controlTooltips.hide(); this.widgetGrid.cancelDrag();
+    this.plugin.sizePicker.close(); this.dismissPreviews(); this.closeItemControls(widget);
+    const menu = this.itemMenu = new Menu().setUseNativeMenu(false).setParentElement(this.contentEl);
+    let acted = false;
+    menu.addItem(item => item.setTitle(COPY.edit).setIcon(DESK_ACTION_ICONS.edit).onClick(() => {
+      acted = true; menu.hide();
+      this.plugin.configureWidget(id, () => { this.focusItemControls(id); });
+    }));
+    menu.onHide(() => {
+      if (this.itemMenu === menu) this.itemMenu = null;
+      if (!acted && !this.closed && widget.el.isConnected) widget.el.focus({ preventScroll: true });
+    });
+    menu.showAtPosition({ x, y }, widget.el.ownerDocument);
   }
 
   private openAddPicker(): void {
@@ -1354,25 +1440,48 @@ class DeskView extends ItemView {
     return sizeButton;
   }
 
-  /** Every floating bar uses Move, Resize, Edit, then Add notes where available. */
+  moveFromEdit(id: string): void {
+    const anchor = this.focusItemControls(id);
+    if (anchor) this.widgetGrid.togglePlacement(id, anchor);
+  }
+
+  private focusItemControls(id: string): HTMLElement | undefined {
+    const widget = this.widgets.get(id);
+    if (this.closed || !widget || !this.plugin.settings.widgets[id]?.enabled) return;
+    const edit = widget.arrangement.controls.editButton;
+    const anchor = (!edit.hidden ? edit : widget.arrangement.el.querySelector<HTMLButtonElement>('button:not([hidden])')) || widget.el;
+    widget.el.focus({ preventScroll: true });
+    if (anchor !== widget.el) anchor.focus({ preventScroll: true });
+    return anchor;
+  }
+
+  /** Create controls once; preference updates only change visibility and order. */
   private createItemControls(id: string, controls: HTMLElement): WidgetControls {
-    const config = this.plugin.settings.widgets[id];
     const gripButton = this.createMoveButton(id, controls);
     const sizeButton = this.createSizeButton(id, controls);
-    const action = (icon: string, label: string, run: () => void) => {
+    const action = (icon: string, label: string, run: (event: MouseEvent) => void) => {
       const button = iconButton(controls, icon, label, run);
       button.type = 'button'; button.addClass('tod-widget-action');
       return button;
     };
     const editButton = action(DESK_ACTION_ICONS.edit, COPY.edit, () => {
       this.controlTooltips.hide(); this.widgetGrid.cancelDrag(); this.plugin.sizePicker.close(); this.dismissPreviews();
-      this.plugin.configureWidget(id, () => {
-        if (!this.closed && this.plugin.settings.widgets[id]?.enabled) this.widgets.get(id)?.arrangement.controls.editButton.focus({ preventScroll: true });
-      });
+      this.plugin.configureWidget(id, () => { this.focusItemControls(id); });
     });
     editButton.setAttribute('aria-haspopup', 'dialog');
-    const stackButton = config.type === 'stack' ? action('plus', COPY.addNotes, () => this.plugin.pickStackNotes(config.itemId)) : undefined;
-    return { gripButton, sizeButton, editButton, stackButton };
+    const buttons = { move: gripButton, resize: sizeButton } as Record<ToolbarAction, HTMLButtonElement>;
+    for (const definition of TOOLBAR_ACTIONS) {
+      const key = definition.id;
+      if (key === 'move' || key === 'resize') continue;
+      const button = action(definition.icon, definition.label, event => {
+        this.controlTooltips.hide(); this.widgetGrid.cancelDrag(); this.plugin.sizePicker.close();
+        this.plugin.runToolbarAction(id, key, undoOrigin(event));
+      });
+      if (key === 'heading' || key === 'baseToolbar') button.setAttribute('aria-pressed', 'false');
+      if (key === 'addNotes') button.setAttribute('aria-haspopup', 'dialog');
+      buttons[key] = button;
+    }
+    return { gripButton, sizeButton, editButton, actions: buttons };
   }
 
   private createEditor(key: 'scratchpad' | 'daily', placeholder: string): NoteEditor {
@@ -1433,10 +1542,43 @@ class DeskView extends ItemView {
     editor.status.remove(); editor.actions.remove(); editor.empty?.el.remove();
   }
 
+  private refreshItemControls(id: string, widget: DeskWidget, order: string): void {
+    const settings = this.plugin.settings, { el, controls } = widget.arrangement;
+    if (controls.order !== order) {
+      reconcileChildren(el, settings.toolbarOrder.map(key => key === 'edit' ? controls.editButton : controls.actions[key]));
+      controls.order = order;
+    }
+    const toolbar = toolbarState(settings, id);
+    const focused = el.ownerDocument.activeElement;
+    updateHidden(controls.editButton, !toolbar.edit);
+    let hasControls = toolbar.edit;
+    for (const action of TOOLBAR_ACTIONS) {
+      const shown = toolbar.available[action.id] && settings.toolbarActions.includes(action.id);
+      updateHidden(controls.actions[action.id], !shown);
+      hasControls ||= shown;
+    }
+    updateHidden(el, !hasControls);
+    updateHidden(widget.toolsToggle, !hasControls);
+    if (!hasControls) this.closeItemControls(widget);
+    if (focused?.parentElement === el && focused.hasAttribute('hidden') || !hasControls && focused === widget.toolsToggle) this.focusItemControls(id);
+    updateAttribute(controls.actions.heading, 'aria-pressed', toolbar.heading === 'mixed' ? 'mixed' : String(toolbar.heading === false));
+    updateAttribute(controls.actions.baseToolbar, 'aria-pressed', String(toolbar.baseHidden));
+    updateTooltip(controls.actions.heading, toolbar.heading === false ? 'Show heading' : COPY.hideHeading);
+    updateTooltip(controls.actions.baseToolbar, toolbar.baseHidden ? 'Show Base toolbar' : COPY.hideBaseControls);
+  }
+
   update(change?: DeskUpdate): void {
     if (!this.shell || this.closed) return;
-    this.refreshQuickActions();
     const settings = this.plugin.settings;
+    const toolbarOrder = settings.toolbarOrder.join(',');
+    // Preference changes cannot affect sources, headings, stack membership or layout.
+    // A batch containing any other change takes the regular update path below.
+    if (change?.toolbarOnly) {
+      for (const [id, widget] of this.widgets) this.refreshItemControls(id, widget, toolbarOrder);
+      this.controlTooltips.refresh();
+      return;
+    }
+    this.refreshQuickActions();
     const owners = widgetStackOwners(settings);
     const requested = change ? new Set(change.widgets) : null;
     if (requested) {
@@ -1500,17 +1642,7 @@ class DeskView extends ItemView {
       widget.el.dataset.rows = String(config.rows);
       const name = widgetName(config);
       widget.el.setAttribute('aria-label', name);
-      updateTooltip(widget.toolsToggle, COPY.actions);
-      widget.arrangement.el.setAttribute('aria-label', COPY.actions);
-      const controls = widget.arrangement.controls;
-      controls.sizeButton.hidden = isFixedSizeWidget(settings, id);
-      updateTooltip(controls.sizeButton, COPY.resize);
-      const appearanceConfig = config.type === 'widget-stack' ? settings.widgets[config.activeMember!] || config : config;
-      // The active member's title also drags its parent stack.
-      widget.el.toggleClass('has-drag-heading', appearanceConfig.type !== 'widget-stack' && appearanceConfig.showHeading !== false);
-      controls.gripButton.setAttribute('aria-label', COPY.move);
-      updateTooltip(controls.gripButton, COPY.move);
-      updateTooltip(controls.editButton, COPY.edit);
+      this.refreshItemControls(id, widget, toolbarOrder);
       if (isSourceWidgetType(config.type) || config.type === 'folder') {
         updateText(widget.title, name); widget.el.setAttribute('aria-label', name);
         if (widget.titleButton) { updateTooltip(widget.titleButton, openSourceLabel(config.type)); widget.titleButton.removeAttribute('aria-label'); }
@@ -1712,6 +1844,7 @@ class DeskView extends ItemView {
   }
   async onClose(): Promise<void> {
     this.closed = true;
+    this.itemMenu?.hide(); this.itemMenu = null;
     this.finishTitleEdit(true); this.addDeskDialog?.close(); this.addDeskDialog = null;
     if (this.controlTooltips) this.removeChild(this.controlTooltips);
     if (this.widgetGrid) this.removeChild(this.widgetGrid);
@@ -1749,6 +1882,11 @@ class DeskSettingTab extends PluginSettingTab {
             plugin.settings.openOnNewTab = value; plugin.changed({ widgets: [], content: false }); plugin.scheduleNewTabHome();
           }));
         } },
+      ] },
+      { type: 'group', heading: 'Toolbar', items: [
+        { name: 'Controls and order', aliases: ['Toolbar order', ...TOOLBAR_ACTIONS.map(action => action.label)],
+          desc: 'Choose shortcuts. Drag to reorder. Turn all off to hide the toolbar.',
+          render: setting => renderToolbarSettings(setting, plugin) },
       ] },
       { type: 'group', heading: 'Scratchpad', items: [
         { name: 'Note path', aliases: ['Scratchpad note path'], desc: 'Created if needed when you write or open it.', render: setting => {

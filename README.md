@@ -26,7 +26,7 @@ Notes and folders have short previews. Bases keep their native view. Canvases, P
 
 1. Open **Top of the Desk** from the ribbon or the **Open desk** command.
 2. Choose **Add to desk**, then select a file or folder. You can also paste a web address and press Enter.
-3. Drag headings to arrange the desk. Use **Edit** for names, appearance, and removal.
+3. Drag headings to arrange the desk. Use **Edit** for names, appearance, and all other actions. Choose and reorder toolbar shortcuts in **Settings → Top of the Desk → Toolbar**. Select Edit alongside other shortcuts, or keep only Edit selected.
 
 Adding an item does not move its source. **Remove from desk** leaves the original file untouched. Items already on the desk stay searchable; selecting one shows you where it is.
 
@@ -48,7 +48,7 @@ Top of the Desk does not fetch website previews or add an external service. Webs
 
 Download `main.js`, `manifest.json`, and `styles.css` from the [GitHub release](https://github.com/justgregb/obsidian-top-of-the-desk/releases/latest). Put the three files in `.obsidian/plugins/top-of-the-desk/` inside your vault, then enable **Top of the Desk** in Community plugins. To update, replace those three files and reload the plugin; keep your existing `data.json`.
 
-Version **0.9.53** requires desktop Obsidian **1.14.4 or later**. Release checks were run on macOS with Obsidian 1.14.4; Windows and Linux have not been exercised. Mobile is excluded from this release. It is not yet listed in the Community directory.
+Version **0.9.66** requires desktop Obsidian **1.14.4 or later**. Release checks were run on macOS with Obsidian 1.14.4; Windows and Linux have not been exercised. Mobile is excluded from this release. It is not yet listed in the Community directory.
 
 ## Development
 
@@ -57,7 +57,7 @@ npm ci
 npm run bundle
 ```
 
-`npm run build` also typechecks; `npm run lint` checks source and CSS, and `npm test` runs 38 automated tests. Desktop integration, settings, and responsive-layout checks are recorded for each release. See [development notes](docs/DEVELOPMENT.md) and the [release checklist](docs/RELEASE-CHECKLIST.md) for verification details.
+`npm run build` also typechecks; `npm run lint` checks source and CSS, and `npm test` runs 41 automated tests. Desktop integration, settings, and responsive-layout checks are recorded for each release. See [development notes](docs/DEVELOPMENT.md) and the [release checklist](docs/RELEASE-CHECKLIST.md) for verification details.
 
 ## License
 

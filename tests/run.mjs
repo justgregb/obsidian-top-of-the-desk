@@ -9,11 +9,12 @@ import assert from 'node:assert/strict';
 globalThis.window = globalThis;
 
 const dir = await mkdtemp(join(tmpdir(), 'top-of-desk-tests-'));
-await build({ entryPoints: ['src/model.ts', 'src/scratch.ts', 'src/word-count.ts'], bundle: true, format: 'cjs', platform: 'node', outdir: dir });
+await build({ entryPoints: ['src/model.ts', 'src/scratch.ts', 'src/word-count.ts', 'src/toolbar-state.ts'], bundle: true, format: 'cjs', platform: 'node', outdir: dir });
 const require = createRequire(import.meta.url);
 const { normalizeSettings, deskPaths, safePath, renamePath, movePin, recentPaths, excerpt, validRecovery } = require(join(dir, 'model.js'));
 const { ScratchStore, ScratchConflict } = require(join(dir, 'scratch.js'));
 const { noteWordCount } = require(join(dir, 'word-count.js'));
+const { toolbarState } = require(join(dir, 'toolbar-state.js'));
 let passed = 0;
 async function test(name, run) { await run(); passed++; console.log('✓ ' + name); }
 function fixture(initial = null) {
@@ -36,6 +37,111 @@ await test('Page-heading visibility defaults on and persists when hidden', () =>
   assert.equal(normalizeSettings({}).pageTitle, 'Top of the Desk');
   const hidden = normalizeSettings({ showHeading: false });
   assert.equal(normalizeSettings(JSON.parse(JSON.stringify(hidden))).pageTitle, '');
+});
+await test('Toolbar choices preserve selected Edit, reject unknown controls, and retain the shared order', () => {
+  assert.deepEqual(normalizeSettings({}).toolbarActions, ['resize', 'edit', 'addNotes']);
+  for (const toolbarActions of [null, {}, 'resize']) assert.deepEqual(normalizeSettings({toolbarActions}).toolbarActions, ['resize', 'edit', 'addNotes']);
+  const s = normalizeSettings({toolbarActions:['remove','edit','resize','resize',null,'move','heading','unknown']});
+  assert.deepEqual(s.toolbarActions,['move','resize','edit','heading','remove']);
+  assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(s))).toolbarActions,s.toolbarActions);
+  assert.deepEqual(normalizeSettings({toolbarActions:['edit']}).toolbarActions,['edit']);
+  const minimal = normalizeSettings({toolbarActions:[]});
+  assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(minimal))).toolbarActions,[]);
+});
+await test('Toolbar ordering preserves saved positions and always includes Edit once', () => {
+  const defaults = ['move','resize','edit','addNotes','heading','baseToolbar','unstack','remove'];
+  for (const toolbarOrder of [undefined, null, {}, [], 'edit']) assert.deepEqual(normalizeSettings({toolbarOrder}).toolbarOrder, defaults);
+  const settings = normalizeSettings({toolbarActions:[],toolbarOrder:['remove','edit','resize','edit',null,'unknown']});
+  assert.deepEqual(settings.toolbarOrder, ['remove','edit','resize','move','addNotes','heading','baseToolbar','unstack']);
+  assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(settings))).toolbarOrder, settings.toolbarOrder);
+  assert.deepEqual(settings.toolbarActions, []);
+});
+await test('Compact sources expose no resize or heading controls; images remain resizable', () => {
+  for (const type of ['pdf','audio','canvas','web','image']) {
+    const s = normalizeSettings({version:10, widgets:{source:{type,enabled:true}}});
+    const state = toolbarState(s,'source');
+    assert.equal(state.available.resize,type==='image');
+    assert.equal(state.available.heading,type==='image');
+    assert.equal(state.available.addNotes,false);
+    assert.equal(state.available.baseToolbar,false);
+    assert.equal(state.available.unstack,false);
+  }
+  assert.ok(Object.values(toolbarState(normalizeSettings({}),'missing').available).every(value=>!value));
+});
+await test('Edit stays hidden when deselected, including items with extra settings', () => {
+  const actions=['move','resize','addNotes','heading','baseToolbar','unstack','remove'];
+  const s=normalizeSettings({pins:['Draft.md'],toolbarActions:actions});
+  for(const id of ['item-note-0','recents','scratchpad','daily','activity']) {
+    s.widgets[id].enabled=true;
+    assert.equal(toolbarState(s,id).edit,false,id);
+  }
+  s.toolbarActions=['resize','heading','remove'];
+  for(const id of ['item-note-0','recents','scratchpad','daily','activity']) {
+    assert.equal(toolbarState(s,id).edit,false,`${id}: a hidden Move shortcut alone does not require Edit`);
+  }
+  s.toolbarActions=actions.filter(id=>id!=='baseToolbar');
+  assert.equal(toolbarState(s,'item-note-0').edit,false,'Inapplicable hidden actions do not require Edit');
+  s.toolbarActions=actions.filter(id=>id!=='heading');
+  assert.equal(toolbarState(s,'item-note-0').edit,false,'Hidden actions do not force Edit to reappear');
+  s.toolbarActions=[];
+  assert.equal(toolbarState(s,'item-note-0').edit,false,'An empty selection hides Edit too');
+  s.widgets['item-note-0'].enabled=false;
+  assert.equal(toolbarState(s,'item-note-0').edit,false);
+  assert.equal(toolbarState(s,'missing').edit,false);
+  for(const type of ['base','canvas','pdf','audio','image','web','folder']) {
+    const details=normalizeSettings({version:10,toolbarActions:actions,widgets:{source:{type,enabled:true}}});
+    assert.equal(toolbarState(details,'source').edit,false,type);
+  }
+  const stack=normalizeSettings({version:10,toolbarActions:actions,items:[{id:'notes',type:'stack',name:'Drafts',paths:['One.md','Two.md']}]});
+  assert.equal(toolbarState(stack,'item-notes').edit,false,'Note stacks respect the Edit toggle');
+});
+await test('Edit selection is consistent across mixed-stack members', () => {
+  const actions=['move','resize','addNotes','heading','baseToolbar','unstack','remove'];
+  const s=normalizeSettings({version:10,toolbarActions:actions,widgets:{
+    scratchpad:{type:'scratchpad',enabled:true},base:{type:'base',enabled:true},
+    group:{type:'widget-stack',enabled:true,members:['scratchpad','base'],activeMember:'scratchpad'},
+  },widgetOrder:['scratchpad','base','group']});
+  assert.equal(toolbarState(s,'group').edit,false);
+  s.widgets.group.activeMember='base';
+  assert.equal(toolbarState(s,'group').edit,false);
+  s.toolbarActions.push('edit');
+  assert.equal(toolbarState(s,'group').edit,true);
+  s.widgets.group.activeMember='scratchpad';
+  s.toolbarActions=actions.filter(id=>id!=='unstack');
+  assert.equal(toolbarState(s,'group').edit,false,'Hidden stack actions do not force Edit to reappear');
+});
+await test('Edit and an empty toolbar selection survive saving and reloading', () => {
+  const actions=['resize','heading','remove'];
+  const s=normalizeSettings({pins:['Draft.md'],toolbarActions:actions});
+  assert.equal(toolbarState(s,'item-note-0').edit,false);
+  s.toolbarActions.push('edit');
+  const saved=normalizeSettings(JSON.parse(JSON.stringify(s)));
+  assert.equal(toolbarState(saved,'item-note-0').edit,true);
+  assert.equal(toolbarState(saved,'missing').edit,false);
+  saved.widgets['item-note-0'].enabled=false;
+  assert.equal(toolbarState(saved,'item-note-0').edit,false);
+  s.toolbarActions=actions;
+  assert.equal(toolbarState(s,'item-note-0').edit,false);
+  s.toolbarActions=['edit'];
+  assert.equal(toolbarState(s,'item-note-0').edit,true);
+  s.toolbarActions=[];
+  assert.equal(toolbarState(normalizeSettings(JSON.parse(JSON.stringify(s))),'item-note-0').edit,false,'The all-off selection stays off after reload');
+});
+await test('Mixed stacks resolve source actions separately from stack-wide appearance and removal', () => {
+  const s = normalizeSettings({version:10,widgets:{
+    pdf:{type:'pdf',enabled:true},base:{type:'base',enabled:true,showBaseControls:false,showHeading:false},
+    group:{type:'widget-stack',enabled:true,members:['pdf','base'],activeMember:'pdf'},
+  },widgetOrder:['pdf','base','group']});
+  const pdf = toolbarState(s,'group');
+  assert.equal(pdf.sourceId,'pdf');
+  assert.equal(pdf.available.resize,true); assert.equal(pdf.available.heading,true);
+  assert.equal(pdf.available.baseToolbar,false); assert.equal(pdf.available.unstack,true);
+  s.widgets.group.activeMember='base';
+  const base = toolbarState(s,'group');
+  assert.equal(base.available.baseToolbar,true); assert.equal(base.baseHidden,true); assert.equal(base.heading,false);
+  s.widgets.base.type='canvas';
+  assert.equal(toolbarState(s,'group').available.resize,false);
+  assert.equal(toolbarState(s,'group').available.heading,false);
 });
 await test('Stack word counts include the full note body and exclude metadata and link destinations', () => {
   assert.equal(noteWordCount('---\ntitle: Hidden words\n---\n# Heading\nHello, world!\n[visible words](https://example.com/private/path)'), 5);

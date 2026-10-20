@@ -1,5 +1,11 @@
 # Release verification
 
+## 0.9.66 — Toolbar preferences and performance
+
+Adds configurable toolbar visibility and order, a more compact Edit dialog, and tracking for revisited web tabs. All controls, including Edit, can be hidden. Right-click and keyboard access keep Edit available.
+
+The release passes 56 automated tests, source and CSS lint, typechecking, build, and packaging. Focused native Obsidian checks passed for 110 toolbar interactions and 13 hover/keyboard tooltip scenarios. Toolbar preference changes avoid source, switcher, layout, and file-choice refreshes; unchanged updates produce no toolbar DOM mutations. Reports are generated in `dist/verification/toolbar-ui.json` and `dist/verification/tooltip-ui.json`.
+
 ## 0.9.53 — Description correction
 
 Updates the manifest and shared release copy so the description no longer starts with the plugin name. Packaging now rejects that wording and mismatched package/manifest descriptions. The runtime code and stylesheet are unchanged from 0.9.52; only the bundle’s version banner changes. Local lint, all 38 automated tests, typechecking, build, and packaging are checked for this patch. The recorded 0.9.52 desktop checks remain the behavioral baseline.
@@ -18,15 +24,15 @@ Current results are recorded in `verification/0.9.52.json`. Windows, Linux, scre
 
 ## Publishing
 
-1. Merge the reviewed changes after the Check workflow passes.
-2. Push tag `0.9.53` on the reviewed source commit, without a `v` prefix.
+1. Push the verified source to `main` and confirm the Check workflow passes.
+2. Push tag `0.9.66` on that source commit, without a `v` prefix.
 3. The Prepare release workflow validates the version, installs locked dependencies, lints, tests, builds, verifies the committed bundle, and packages the three runtime files.
 4. GitHub Actions generates provenance attestations for those exact assets and creates a **draft** release containing only `main.js`, `manifest.json`, and `styles.css`.
-5. Review the draft and publish it. Do not replace files from an already published tag; use a new version for changes.
+5. Verify the draft assets and attestations, then publish it. Do not replace files from an already published tag; use a new version for changes.
 
 Attestations are created by GitHub Actions, not by a local build. After downloading a release asset, verify it with `gh attestation verify main.js --repo justgregb/obsidian-top-of-the-desk` (repeat for the other assets).
 
-Local SHA-256 checksums remain in `dist/0.9.53-SHA256SUMS.txt`, outside the asset directory. They are not uploaded to releases. Previous releases retain their historical assets and verification records.
+Local SHA-256 checksums remain in `dist/0.9.66-SHA256SUMS.txt`, outside the asset directory. They are not uploaded to releases. Previous releases retain their historical assets and verification records.
 
 The vault-enumeration recommendation is intentional: Add to desk must list supported files and folders, and Daily notes needs a case-insensitive fallback. See [Storage and privacy](PRIVACY.md). It is not a claim that the plugin sends file paths elsewhere.
 

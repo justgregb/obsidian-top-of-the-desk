@@ -1,5 +1,5 @@
 import { COPY, sizeLabel } from './copy';
-import { Component } from 'obsidian';
+import { type App, Component, Scope } from 'obsidian';
 import { UndoOrigin, undoOrigin } from './undo-notice';
 import type { WidgetSize } from './model';
 import { WIDGET_HEIGHTS, normalizeWidgetRows } from './widget-sizing';
@@ -10,12 +10,15 @@ export class WidgetSizePicker extends Component {
   private anchor: HTMLElement | null = null;
   private dismiss: ((restoreFocus: boolean) => void) | null = null;
 
-  open(anchor: HTMLElement, current: WidgetSize, choose: (size: WidgetSize, origin?: UndoOrigin) => void, availableColumns = 4): void {
+  constructor(private app: App) { super(); }
+
+  open(anchor: HTMLElement, current: WidgetSize, choose: (size: WidgetSize, origin?: UndoOrigin) => void, availableColumns = 4, container?: HTMLElement): void {
     if (this.anchor === anchor) { this.close(true); return; }
     this.close(false);
     this.anchor = anchor;
     const doc = anchor.ownerDocument, win = doc.defaultView!;
-    const popup = doc.body.createDiv({ cls: 'tod-size-picker', attr: { role: 'dialog', 'aria-label': COPY.resize } });
+    // A picker opened from Edit stays inside the modal's focus boundary.
+    const popup = (container || doc.body).createDiv({ cls: 'tod-size-picker', attr: { role: 'dialog', 'aria-label': COPY.resize } });
     const maxColumns = Math.max(1, Math.min(4, availableColumns));
     const heights: number[] = WIDGET_HEIGHTS.map(size => size.rows);
     popup.style.setProperty('--tod-size-columns', String(maxColumns));
@@ -78,24 +81,23 @@ export class WidgetSizePicker extends Component {
       const target = event.target as Node;
       if (!popup.contains(target) && !anchor.contains(target)) this.close(false);
     };
-    const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.close(true); }
-      else if (event.key === 'Tab') this.close(true);
-    };
+    const scope = new Scope();
+    scope.register(null, 'Escape', () => { this.close(true); return false; });
+    scope.register(null, 'Tab', () => { this.close(true); return true; });
     const moved = (event: Event) => { if (!popup.contains(event.target as Node)) this.close(false); };
     const blurred = () => this.close(false);
     const focusOutside = (event: FocusEvent) => {
       if (!popup.contains(event.target as Node) && !anchor.contains(event.target as Node)) this.close(false);
     };
     doc.addEventListener('pointerdown', outside, true);
-    doc.addEventListener('keydown', keydown, true);
+    this.app.keymap.pushScope(scope);
     doc.addEventListener('focusin', focusOutside);
     doc.addEventListener('scroll', moved, true);
     win.addEventListener('resize', blurred);
     win.addEventListener('blur', blurred);
     this.dismiss = restoreFocus => {
       doc.removeEventListener('pointerdown', outside, true);
-      doc.removeEventListener('keydown', keydown, true);
+      this.app.keymap.popScope(scope);
       doc.removeEventListener('focusin', focusOutside);
       doc.removeEventListener('scroll', moved, true);
       win.removeEventListener('resize', blurred);

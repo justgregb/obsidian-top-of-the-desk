@@ -1,4 +1,5 @@
 import { isRecord, isUnknownArray, hasControlCharacters, stripControls, singleLine } from './validation';
+import { normalizeToolbarActions, normalizeToolbarOrder, type ToolbarControl } from './toolbar-preferences';
 import { SOURCE_TYPES, isCompactSourceType, isFileWidgetType, matchesSourceFile, sourceWebName, sourceWebUrl } from './source-types';
 import { COMPACT_HEIGHT, HALF_HEIGHT, STANDARD_HEIGHT, migrateWidgetRows, normalizeWidgetRows } from './widget-sizing';
 
@@ -125,6 +126,8 @@ export interface DeskSettings {
   scratchPath: string;
   widgets: Record<string, WidgetSettings>;
   widgetOrder: string[];
+  toolbarActions: ToolbarControl[];
+  toolbarOrder: ToolbarControl[];
 }
 
 export function safePath(value: unknown, extension?: string): string | null {
@@ -211,6 +214,8 @@ export function normalizeSettings(raw: unknown): DeskSettings {
     openOnNewTab: typeof s.openOnNewTab === 'boolean' ? s.openOnNewTab : true,
     pageTitle: typeof s.pageTitle === 'string' ? stripControls(s.pageTitle).trim().slice(0, 100) : s.showHeading === false ? '' : 'Top of the Desk',
     scratchPath: safePath(s.scratchPath, 'md') || 'Desk scratchpad.md',
+    toolbarActions: normalizeToolbarActions(s.toolbarActions),
+    toolbarOrder: normalizeToolbarOrder(s.toolbarOrder),
     widgets,
     widgetOrder: [...new Set([...order, ...Object.keys(widgets)])]
   };

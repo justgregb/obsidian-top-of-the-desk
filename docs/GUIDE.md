@@ -2,7 +2,7 @@
 
 A quiet Obsidian home for the files, websites, and writing tools you want within reach.
 
-Version **0.9.51** · Requires desktop Obsidian **1.14.4 or later**. Verified on macOS with Obsidian **1.14.4**. Mobile is excluded; Windows and Linux were not exercised.
+Version **0.9.66** · Requires desktop Obsidian **1.14.4 or later**. Verified on macOS with Obsidian **1.14.4**. Mobile is excluded; Windows and Linux were not exercised.
 
 ## Make it yours
 
@@ -29,7 +29,13 @@ Canvases, PDFs, audio, and URLs have one fixed compact size. Other items offer *
 
 ## Arrange and group
 
-Hover over an item or focus it with the keyboard to reveal its toolbar. On touch, use the ellipsis button for actions. The floating toolbar follows one order: **Move**, **Resize**, **Edit**, then **Add notes**. Only available actions appear. **Edit** (horizontal sliders) contains heading and Base-toolbar visibility, **Unstack**, and **Remove from desk** where applicable. **Save** becomes available when you change a setting and applies the changes together; **Cancel** discards them. Unstack and removal are separate actions with Undo. Preview windows keep **Close** last. **Remove from desk** and visibility actions keep their full meaning. Forms use **Name**, **Display**, and **View**, with **Add** or **Create** to finish. Edit preferences apply only to the desk. Drag a heading to reposition an item. **Move** remains available when a heading is hidden, when using the keyboard, and on touch. Activate it, use the arrow keys, then press Enter to place the item. Escape cancels.
+Hover over an item or focus it with the keyboard to reveal its toolbar. On touch, use the ellipsis button for actions. In **Settings → Top of the Desk → Toolbar**, click icons to choose shortcuts and drag to reorder them. Hidden shortcuts stay dimmed so you can enable them again. Hover or focus an icon for its name, scope, and current state. For keyboard reordering, focus an icon and use the Left and Right arrow keys. Choices apply across the desk, and only relevant controls appear.
+
+**Edit** (horizontal sliders) follows its toggle like every other shortcut. Leave only Edit selected to keep all actions inside it, or turn every icon off to hide the toolbar completely. Right-click an item’s heading or background and choose **Edit** to access its settings and actions. With an item focused, **Shift+F10** or the context-menu key opens the same menu. Heading dragging still works with the toolbar hidden. **Reset** restores Resize, Edit, Add notes, and the default order.
+
+**Edit** contains every available action in your chosen toolbar order, including Move and Resize. **Hide heading** and **Hide Base toolbar** are toggle buttons alongside the other controls; a highlighted button means that option is enabled. Source, appearance, and resize changes stay in the form until **Save**, which applies them together; **Cancel** discards them. Opening Add notes preserves the Edit form. Save or cancel pending edits before moving, unstacking, or removing an item. Unstack and removal are immediate actions with Undo. Edit preferences apply only to the desk.
+
+Drag a heading to reposition an item. For keyboard movement, choose **Move** from the toolbar or Edit, then use the arrow keys. Each arrow moves the item one step; Escape or Tab exits placement. You can also click a destination on the desk.
 
 Drop one note onto another to create a note stack. Stacks require at least two notes; a stack with one remaining note becomes an individual note. Click a stack or folder cover to browse it, then choose a note to open. Use **New note stack** in Add to desk to select notes without dragging. Selections stay checked as you filter; **Show more** reveals the next set of results.
 
@@ -41,14 +47,14 @@ In **Edit**, **Hide heading** controls the title and icon together where the con
 
 - **Scratchpad** edits a regular Markdown note. The file is created only when needed. Select text to create a separate note and add it to the desk.
 - **Daily note** follows Obsidian’s Daily notes folder, date format, and template. Choose **Create today’s note** to get started.
-- **Recently opened** includes the same eight source types. Every entry follows one rule: **Today** or **Earlier**, covering today and the previous six local calendar days. Up to 100 distinct entries are shown. Web pages come from Obsidian’s local Web viewer history. Folder history records browsing or revealing a folder through the desk; expanding a sidebar folder alone does not count.
+- **Recently opened** includes the same eight source types. Every entry follows one rule: **Today** or **Earlier**, covering today and the previous six local calendar days. Up to 100 distinct entries are shown. Web pages come from Obsidian’s local Web viewer history. Returning to an open website or bringing its Obsidian window forward updates its last-viewed time. Closing an untouched background tab does not. Folder history records browsing or revealing a folder through the desk; expanding a sidebar folder alone does not count.
 - **Writing activity** records net word changes: words added minus words removed. Tracking begins when the tool is first added. It does not reconstruct earlier activity or count synced changes as writing.
 
 **Last worked on** marks the most recently edited eligible note. Its action resumes the original note, reusing an open tab where possible. Opening or previewing a note does not mark it as edited.
 
 ## Storage and recovery
 
-Desk layout, source references, removed items, and appearance preferences live in the plugin’s `data.json`. Recent file/folder history, writing totals, last-worked state, and draft recovery use vault-scoped local Obsidian storage. Folder search and scroll memory last for the current plugin session.
+Desk layout, source references, removed items, and appearance preferences live in the plugin’s `data.json`. Recent file/folder history, up to 100 website revisit timestamps, writing totals, last-worked state, and draft recovery use vault-scoped local Obsidian storage. Folder search and scroll memory last for the current plugin session.
 
 Notes stay ordinary Markdown files. Scratchpad and Daily note editing preserve frontmatter and line endings, and check for external changes before saving. If a conflict occurs, **Save draft as new note** keeps both versions. An unsaved daily draft retains its original date and source across midnight.
 

@@ -1,5 +1,5 @@
 import { Component } from 'obsidian';
-import { HOVER_DELAY_MS, updateText } from './ui';
+import { HOVER_DELAY_MS, updateHidden, updateText } from './ui';
 
 /** One reusable portal per surface. The anchor already supplies its accessible name. */
 export class HoverTooltip extends Component {
@@ -12,12 +12,13 @@ export class HoverTooltip extends Component {
   constructor(private doc: Document) { super(); }
 
   schedule(anchor: HTMLElement, label: () => string): void {
-    if (this.anchor === anchor) return;
+    if (this.stopped || this.anchor === anchor) return;
     this.hide(); this.anchor = anchor; this.label = label;
     this.timer = this.doc.defaultView!.setTimeout(() => {
       this.timer = 0;
-      if (anchor.matches(':hover')) this.show(anchor, label);
-      else this.hide();
+      // Pointer exit cancels this timer. Detached Obsidian windows can receive
+      // pointer entry while :hover is false, so don't use it as a second gate.
+      this.show(anchor, label);
     }, HOVER_DELAY_MS);
   }
 
@@ -29,7 +30,7 @@ export class HoverTooltip extends Component {
     if (!text) { this.hide(); return; }
     this.anchor = anchor; this.label = label;
     const el = this.el ??= this.doc.body.createDiv({ cls: 'tod-tooltip', attr: { role: 'tooltip', 'aria-hidden': 'true' } });
-    updateText(el, text); el.hidden = false;
+    updateText(el, text); updateHidden(el, false);
     const bounds = anchor.getBoundingClientRect(), tip = el.getBoundingClientRect();
     const width = this.doc.documentElement.clientWidth, height = this.doc.documentElement.clientHeight;
     const left = Math.max(8, Math.min(bounds.left + (bounds.width - tip.width) / 2, width - tip.width - 8));
@@ -48,7 +49,7 @@ export class HoverTooltip extends Component {
   hideFor(anchor: HTMLElement): void { if (this.anchor === anchor) this.hide(); }
   hide(): void {
     this.cancelTimer(); this.anchor = null; this.label = null;
-    if (this.el) this.el.hidden = true;
+    if (this.el) updateHidden(this.el, true);
   }
   private cancelTimer(): void {
     if (this.timer) this.doc.defaultView!.clearTimeout(this.timer);

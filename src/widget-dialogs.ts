@@ -69,6 +69,7 @@ export class SourceWidgetModal extends Modal {
     const form = this.contentEl.createEl('form', { cls: 'tod-widget-form' });
     if (this.id) form.createEl('p', { cls: 'tod-form-help', text: COPY.deskOnly });
     const sourceField = form.createEl('label', { cls: 'tod-widget-field' });
+    sourceField.addClass('tod-source-field');
     const fieldId = `tod-source-${crypto.randomUUID()}`;
     sourceField.createSpan({ text: this.type === 'folder' ? 'Folder' : this.type === 'web' ? 'Web address' : SOURCE_TYPES[this.type].name, attr: { id: fieldId } });
     this.sourceInput = sourceField.createEl('input', { attr: {
@@ -86,18 +87,20 @@ export class SourceWidgetModal extends Modal {
     }
     const titleField = form.createEl('label', { cls: 'tod-widget-field' });
     titleField.createSpan({ text: COPY.name, cls: 'tod-widget-field-label', attr: { id: `${fieldId}-name` } }).createSpan({ text: 'Optional', cls: 'tod-field-optional' });
-    this.heading = titleField.createEl('input', { attr: { type: 'text', maxlength: '100', 'aria-labelledby': `${fieldId}-name`, 'aria-describedby': `${fieldId}-name-help` } });
+    this.heading = titleField.createEl('input', { attr: { type: 'text', maxlength: '100', 'aria-labelledby': `${fieldId}-name` } });
     this.heading.value = this.draft.title;
     this.heading.oninput = () => { this.automaticTitle = !this.heading.value.trim(); this.updateSubmit(); };
-    titleField.createSpan({ cls: 'tod-source-path', text: `Defaults to the ${this.type === 'web' ? 'web address' : this.type === 'folder' ? 'folder name' : 'file name'}.`, attr: { id: `${fieldId}-name-help` } });
+    if (!this.id) {
+      this.heading.setAttribute('aria-describedby', `${fieldId}-name-help`);
+      titleField.createSpan({ cls: 'tod-source-path', text: `Defaults to the ${this.type === 'web' ? 'web address' : this.type === 'folder' ? 'folder name' : 'file name'}.`, attr: { id: `${fieldId}-name-help` } });
+    }
     if (this.id && this.rootId) {
       this.editControls = new EditControls(this.plugin, this, this.rootId, this.id, () => this.updateSubmit());
-      this.editControls.preferences(form);
+      this.editControls.actions(form);
     }
     const actions = form.createDiv('tod-dialog-actions');
     actions.createEl('button', { text: 'Cancel', attr: { type: 'button' } }).onclick = () => this.close();
     this.submit = actions.createEl('button', { text: this.id ? 'Save' : COPY.add, cls: 'mod-cta', attr: { type: 'submit' } });
-    this.editControls?.actions(form);
     if (this.type !== 'web') this.suggestions = new SourceSuggestions(this.plugin, this.sourceInput, this.type, item => {
       if (this.closed) return;
       this.setSource(item.path);
@@ -146,6 +149,7 @@ export class SourceWidgetModal extends Modal {
   private updateSubmit(): void {
     if (!this.submit) return;
     const source = JSON.stringify([this.draft.path, this.draft.view, this.normalizedTitle(this.heading.value)]);
+    this.editControls?.setUnsaved(source !== this.initialSource || !!this.editControls.dirty || this.sourceInput.value.trim() !== this.draft.path);
     this.submit.disabled = !this.hasValidSource() || !!this.id && source === this.initialSource && !this.editControls?.dirty;
   }
   private validSource(source: unknown): source is TFile | TFolder {
@@ -192,6 +196,7 @@ export class SourceWidgetModal extends Modal {
     updateText(this.sourceHelp, text); this.sourceHelp.hidden = !text;
   }
   onClose(): void {
+    this.editControls?.close();
     if (this.closed) return;
     this.closed = true; this.generation++; this.suggestions?.close(); this.releaseDialog(); this.contentEl.empty();
     if (!this.editControls?.acted && this.onFinish) queueMicrotask(() => this.onFinish?.(this.submitted));

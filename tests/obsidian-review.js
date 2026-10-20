@@ -49,8 +49,8 @@
     markerRow.remove();
     p.openSettings(p.manifest.id); await settle();
     const tab = app.setting.activeTab, definitions = tab.getSettingDefinitions();
-    assert(definitions.length===3 && definitions.flatMap(g=>g.items).some(i=>i.aliases?.includes('Scratchpad note path')), 'Settings expose searchable definitions');
-    assert(tab.containerEl.querySelectorAll('input').length===3, 'Native settings render all three inputs');
+    assert(definitions.some(g=>g.heading==='Toolbar') && definitions.flatMap(g=>g.items).some(i=>i.aliases?.includes('Scratchpad note path')), 'Settings expose searchable definitions');
+    assert(tab.containerEl.querySelectorAll('input').length===10, 'Native settings render startup, toolbar, and scratchpad inputs');
     const toggle = tab.containerEl.querySelector('input[type=checkbox]');
     toggle.click(); await p.whenSaved();
     assert(p.settings.openOnStartup!==before.openOnStartup, 'Declarative preference changes persist through the existing save queue');

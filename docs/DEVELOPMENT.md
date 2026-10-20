@@ -1,6 +1,6 @@
 # Development
 
-Top of the Desk 0.9.53 uses settings schema 10. Runtime dependencies on Obsidian and CodeMirror remain external to the production bundle.
+Top of the Desk 0.9.66 uses settings schema 10. Runtime dependencies on Obsidian and CodeMirror remain external to the production bundle.
 
 ```sh
 npm ci
@@ -11,7 +11,7 @@ npm run build
 npm run package
 ```
 
-`npm test` runs 38 automated tests. `npm run build` typechecks before bundling; `npm run bundle` only bundles. `npm run package` checks coordinated versions, compatibility metadata, bundle banner, and description, then generates only the three runtime assets in `dist/<version>/`. Local SHA-256 checksums are written alongside that directory, never inside it.
+`npm test` runs 56 automated tests. `npm run build` typechecks before bundling; `npm run bundle` only bundles. `npm run package` checks coordinated versions, compatibility metadata, bundle banner, and description, then generates only the three runtime assets in `dist/<version>/`. Local SHA-256 checksums are written alongside that directory, never inside it.
 
 ## Desktop checks
 
@@ -21,6 +21,9 @@ Use a separate demo vault named `Top of the Desk Release QA`, created with `scri
 npm run test:obsidian -- "Top of the Desk Release QA"
 node scripts/test-ui.mjs "Top of the Desk Release QA"
 node scripts/test-review-ui.mjs "Top of the Desk Release QA"
+node scripts/test-toolbar-ui.mjs "Top of the Desk Release QA"
+node scripts/test-tooltip-ui.mjs "Top of the Desk Release QA"
+node scripts/test-web-visits.mjs "Top of the Desk Release QA"
 ```
 
 Integration checks exercise actual vault writes, draft recovery, source additions, layouts, audio, editor input, writing counts, and reload persistence. Interaction checks cover the Move key handler, actual DevTools mouse input, Undo, dialogs, and desktop responsive layouts. Reports and screenshots are saved under ignored `dist/verification/`.

@@ -14,6 +14,9 @@ export function updateText(el: HTMLElement, text: string): void {
 export function updateAttribute(el: HTMLElement, name: string, value: string): void {
   if (el.getAttribute(name) !== value) el.setAttribute(name, value);
 }
+export function updateHidden(el: HTMLElement, hidden: boolean): void {
+  if (el.hidden !== hidden) el.hidden = hidden;
+}
 /** Drag feedback often stays in the same place while the pointer keeps moving. */
 export function updateBounds(el: HTMLElement, bounds: ElementBounds): void {
   const previous = overlayBounds.get(el);

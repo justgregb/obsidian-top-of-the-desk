@@ -78,7 +78,7 @@ export class CollectionDetailsModal extends Modal {
       toggle.toggleEl.setAttribute('aria-label', 'Word count');
     });
     this.editControls = new EditControls(this.plugin, this, this.rootId, widgetId, () => updateSave());
-    this.editControls.preferences(form);
+    this.editControls.actions(form);
     const actions = form.createDiv('tod-dialog-actions');
     actions.createEl('button', { text: 'Cancel', attr: { type: 'button' } }).onclick = () => this.close();
     const submit = actions.createEl('button', { text: 'Save', cls: 'mod-cta', attr: { type: 'submit' } });
@@ -87,9 +87,11 @@ export class CollectionDetailsModal extends Modal {
       singleLine(description.value).slice(0, 240), visibility,
     ]);
     const initialDetails = details();
-    updateSave = () => { submit.disabled = details() === initialDetails && presentation === initialPresentation && !this.editControls?.dirty; };
+    updateSave = () => {
+      submit.disabled = details() === initialDetails && presentation === initialPresentation && !this.editControls?.dirty;
+      this.editControls?.setUnsaved(!submit.disabled);
+    };
     form.addEventListener('input', updateSave); updateSave();
-    this.editControls.actions(form);
     form.onsubmit = event => {
       event.preventDefault();
       if (submit.disabled) return;
@@ -108,6 +110,7 @@ export class CollectionDetailsModal extends Modal {
   }
 
   onClose(): void {
+    this.editControls?.close();
     this.stopWatching?.(); this.stopWatching = undefined;
     this.releaseDialog(); this.contentEl.empty();
     const origin = this.origin; this.origin = undefined;

@@ -18,7 +18,7 @@ try {
   `, resolveDir: process.cwd() }, outfile, bundle: true, platform: 'node', format: 'cjs', plugins: [{ name: 'host', setup(b) {
     b.onResolve({ filter: /^obsidian$/ }, () => ({ path: 'obsidian', namespace: 'host' }));
     b.onLoad({ filter: /.*/, namespace: 'host' }, () => ({ contents: `
-      export class Component {} export class Events {} export class Notice {} export const Keymap = {};
+      export class Component {} export class Events {} export class Notice {} export class View {} export const Keymap = {};
       export class TFile { constructor(path) { this.path=path; this.name=path.split('/').pop(); this.basename=this.name.replace(/\\.[^.]+$/, ''); this.extension=path.split('.').pop(); } }
       export class TFolder { constructor(path) { this.path=path; this.name=path; } }
       export function setTooltip() {}

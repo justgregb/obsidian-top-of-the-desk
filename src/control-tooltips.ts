@@ -7,7 +7,7 @@ const CONTROLS = '.tod-widget-controls button, button.tod-icon-button, button.to
 export class ControlTooltips extends Component {
   private tooltip: HoverTooltip;
 
-  constructor(private root: HTMLElement) {
+  constructor(private root: HTMLElement, private selector = CONTROLS) {
     super();
     root.addClass('tod-control-tooltip-surface');
     this.register(() => root.removeClass('tod-control-tooltip-surface'));
@@ -40,7 +40,7 @@ export class ControlTooltips extends Component {
   }
 
   private button(target: EventTarget | null): HTMLButtonElement | null {
-    const button = (target as Element | null)?.closest?.<HTMLButtonElement>(CONTROLS);
+    const button = (target as Element | null)?.closest?.<HTMLButtonElement>(this.selector);
     return button && this.root.contains(button) && !button.ownerDocument.body.hasClass('tod-pointer-dragging') && !button.closest('.is-widget-placing, .is-widget-dragging') ? button : null;
   }
 
